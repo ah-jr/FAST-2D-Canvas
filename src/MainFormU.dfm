@@ -11,6 +11,21 @@ object MainForm: TMainForm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnCreate = FormCreate
+  OnPaint = FormPaint
   PixelsPerInch = 96
   TextHeight = 13
+  object pnlD3dCanvas: TPanel
+    Left = 0
+    Top = 0
+    Width = 740
+    Height = 600
+    Align = alClient
+    Caption = 'pnlD3dCanvas'
+    TabOrder = 0
+    ExplicitLeft = 288
+    ExplicitTop = 296
+    ExplicitWidth = 185
+    ExplicitHeight = 41
+  end
 end

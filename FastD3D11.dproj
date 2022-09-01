@@ -103,7 +103,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="src\MainFormU.pas"/>
-        <DCCReference Include="src\D3DeviceU.pas"/>
+        <DCCReference Include="src\D3DCanvasU.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
