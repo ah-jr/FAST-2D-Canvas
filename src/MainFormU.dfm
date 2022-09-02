@@ -23,9 +23,5 @@ object MainForm: TMainForm
     Align = alClient
     Caption = 'pnlD3dCanvas'
     TabOrder = 0
-    ExplicitLeft = 288
-    ExplicitTop = 296
-    ExplicitWidth = 185
-    ExplicitHeight = 41
   end
 end

@@ -26,6 +26,13 @@ type
     MSAA        : Integer;
   end;
 
+  TD3DVertexA = record
+    x, y: Single;
+    color: TFourSingleArray;
+  end;
+
+  PD3DVertexA = ^TD3DVertexA;
+
   TD3DCanvas = class
   private
     m_cpProp : TD3DCanvasProperties;
@@ -47,12 +54,36 @@ type
     constructor Create(a_cpProp : TD3DCanvasProperties);
     destructor Destroy; override;
 
+    procedure Clear(a_clColor: TFourSingleArray);
+    procedure Paint;
+
     property Device        : ID3D11Device        read m_Device        write m_Device;
     property DeviceContext : ID3D11DeviceContext read m_DeviceContext write m_DeviceContext;
 
   end;
 
+  function D3DColor4f(a_dRed, a_dGreen, a_dBlue, a_dAlpha: Single): TFourSingleArray; inline;
+  function D3DColor4fARGB(a_ARGB: Cardinal): TFourSingleArray; inline;
+
 implementation
+
+//==============================================================================
+function D3DColor4f(a_dRed, a_dGreen, a_dBlue, a_dAlpha: Single): TFourSingleArray;
+begin
+  Result[0] := a_dRed;
+  Result[1] := a_dGreen;
+  Result[2] := a_dBlue;
+  Result[3] := a_dAlpha;
+end;
+
+//==============================================================================
+function D3DColor4fARGB(a_ARGB: Cardinal): TFourSingleArray;
+begin
+  Result[0] := Byte(a_ARGB shr 16) / 255;
+  Result[1] := Byte(a_ARGB shr 8) / 255;
+  Result[2] := Byte(a_ARGB) / 255;
+  Result[3] := Byte(a_ARGB shr 24) / 255;
+end;
 
 //==============================================================================
 constructor TD3DCanvas.Create(a_cpProp : TD3DCanvasProperties);
@@ -72,6 +103,18 @@ destructor TD3DCanvas.Destroy;
 begin
   Reset;
   Inherited;
+end;
+
+//==============================================================================
+procedure TD3DCanvas.Clear(a_clColor: TFourSingleArray);
+begin
+  m_DeviceContext.ClearRenderTargetView(m_RenderTargetView, a_clColor);
+end;
+
+//==============================================================================
+procedure TD3DCanvas.Paint;
+begin
+  m_Swapchain.Present(0, 0);
 end;
 
 //==============================================================================
@@ -160,10 +203,8 @@ begin
 
     m_DeviceContext.RSSetViewports(1, @m_Viewport);
 
-    
-    m_bInitialized := True;
   finally
-
+    m_bInitialized := True;
   end;
 end;
 
