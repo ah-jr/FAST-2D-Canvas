@@ -6,6 +6,3 @@
 __history/
 *.raw
 deps/
-
-!bin/ffmpeg/*.exe
-!bin/ffmpeg/*.dll
