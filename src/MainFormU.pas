@@ -29,10 +29,13 @@ type
     pnlD3dCanvas: TPanel;
     procedure FormCreate(Sender: TObject);
     procedure FormPaint(Sender: TObject);
+    procedure pnlD3dCanvasMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
   private
     m_d3dCanvas : TD3DCanvas;
 
-    procedure CreateVertices(a_buffer : ID3D11Buffer);
+
+
   public
   end;
 
@@ -48,10 +51,6 @@ var
   d3dProp : TD3DCanvasProperties;
   RASTERIZER_DESC: D3D11_RASTERIZER_DESC;
   ppRasterizerState: ID3D11RasterizerState;
-  stride, offset: UINT;
-  buffer : ID3D11Buffer;
-  BLEND_DESC: D3D11_BLEND_DESC;
-  ppBlendState: ID3D11BlendState;
 begin
   with d3dProp do
   begin
@@ -67,43 +66,57 @@ begin
   RASTERIZER_DESC.CullMode := D3D11_CULL_NONE;
   m_d3dCanvas.Device.CreateRasterizerState(RASTERIZER_DESC, ppRasterizerState);
   m_d3dCanvas.DeviceContext.RSSetState(ppRasterizerState);
-
-  stride := SizeOf(TD3DVertexA);
-  offset := 0;
-
-  BLEND_DESC := D3D11_BLEND_DESC.Create(True);
-
-  m_d3dCanvas.Clear(D3DColor4f(0.0, 0.0, 0.0, 1.0));
-
-//  m_d3dCanvas.Device.CreateBlendState(BLEND_DESC, ppBlendState);
-//  m_d3dCanvas.DeviceContext.OMSetBlendState(ppBlendState, D3DColor4f(1.0, 1.0, 1.0, 1.0), $ffffffff);
-
-//  CreateVertices(buffer);
-//
-//  // set matrix
-//
-//  m_d3dCanvas.DeviceContext.IASetVertexBuffers(0, 1, buffer, @stride, @offset);
-//  m_d3dCanvas.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-//  m_d3dCanvas.DeviceContext.Draw(2, 0);
-
-  m_d3dCanvas.Paint;
 end;
 
 //==============================================================================
-procedure TMainForm.CreateVertices(a_buffer : ID3D11Buffer);
+procedure TMainForm.FormPaint(Sender: TObject);
+begin
+  //
+end;
+
+//==============================================================================
+procedure TMainForm.pnlD3dCanvasMouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: Integer);
 var
+  BLEND_DESC: D3D11_BLEND_DESC;
+  ppBlendState: ID3D11BlendState;
+  stride, offset: UINT;
+  buffer : ID3D11Buffer;
+
+
+
   Vertexes         : array[0..1] of TD3DVertexA;
   ArrayIndex       : Integer;
   VertexBufferSize : UInt;
   vert_buffer_desc : TD3D11_BUFFER_DESC;
   vert_subresource : TD3D11_SUBRESOURCE_DATA;
+  Error : HResult;
 begin
-  Vertexes[0].x := 10;
-  Vertexes[0].y := 10;
+  stride := SizeOf(TD3DVertexA);
+  offset := 0;
+  BLEND_DESC := D3D11_BLEND_DESC.Create(True);
+
+  m_d3dCanvas.Clear(D3DColor4f(0.0, 1.0, 0.0, 1.0));
+  m_d3dCanvas.Device.CreateBlendState(BLEND_DESC, ppBlendState);
+  m_d3dCanvas.DeviceContext.OMSetBlendState(ppBlendState, D3DColor4f(1.0, 1.0, 1.0, 1.0), $ffffffff);
+
+
+
+
+
+
+
+
+
+
+  Vertexes[0].x := 0;
+  Vertexes[0].y := 0;
+  Vertexes[0].z := 0;
   Vertexes[0].Color := D3DColor4f(1,0,0,1);
 
-  Vertexes[1].x := 100;
-  Vertexes[1].y := 100;
+  Vertexes[1].x := 0;
+  Vertexes[1].y := 0;
+  Vertexes[1].z := 0;
   Vertexes[1].Color :=  D3DColor4f(1,0,0,1);
 
   VertexBufferSize := Length(Vertexes) * SizeOf(TD3DVertexA);
@@ -125,13 +138,26 @@ begin
     SysMemSlicePitch := 0;
   end;
 
-  m_d3dCanvas.Device.CreateBuffer(vert_buffer_desc, @vert_subresource, a_buffer);
-end;
+   Error:= m_d3dCanvas.Device.CreateBuffer(vert_buffer_desc, @vert_subresource, buffer);
 
-//==============================================================================
-procedure TMainForm.FormPaint(Sender: TObject);
-begin
-  //
+   If Failed(Error) then
+   begin
+     Sleep(1);
+   end;
+
+
+
+
+
+
+//
+//  // set matrix
+//
+  m_d3dCanvas.DeviceContext.IASetVertexBuffers(0, 1, buffer, @stride, @offset);
+  m_d3dCanvas.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+  m_d3dCanvas.DeviceContext.Draw(2, 0);
+
+  m_d3dCanvas.Paint;
 end;
 
 end.

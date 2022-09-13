@@ -27,7 +27,7 @@ type
   end;
 
   TD3DVertexA = record
-    x, y: Single;
+    x, y, z: Single;
     color: TFourSingleArray;
   end;
 
@@ -42,8 +42,12 @@ type
     m_CurrentFeatureLevel: TD3D_FEATURE_LEVEL;
     m_Swapchain: IDXGISwapChain;
     m_RenderTargetView: ID3D11RenderTargetView;
-
     m_Viewport: TD3D11_VIEWPORT;
+
+    m_DepthStencilBuffer: ID3D11Texture2D;
+    m_DepthStencilState: ID3D11DepthStencilState;
+    m_DepthStencilView: ID3D11DepthStencilView;
+    m_RasterizerState: ID3D11RasterizerState;
   
     m_bInitialized : Boolean;
 
@@ -113,8 +117,10 @@ end;
 
 //==============================================================================
 procedure TD3DCanvas.Paint;
+var
+Error : HResult;
 begin
-  m_Swapchain.Present(0, 0);
+  Error:= m_Swapchain.Present(0, 0);
 end;
 
 //==============================================================================
@@ -137,6 +143,10 @@ var
   arrFeatureLevel : Array[0..0] of TD3D_FEATURE_LEVEL;
   Backbuffer      : ID3D11Texture2D;
   SwapchainDesc   : DXGI_SWAP_CHAIN_DESC;
+  DepthDesc       : TD3D11_TEXTURE2D_DESC;
+  DepthStateDesc  : TD3D11_DEPTH_STENCIL_DESC;
+  DepthViewDesc   : TD3D11_DEPTH_STENCIL_VIEW_DESC;
+  RastStateDesc   : TD3D11_RASTERIZER_DESC;
 begin
   if m_bInitialized then
     Reset;
@@ -187,6 +197,89 @@ begin
     m_Device.CreateRenderTargetView(Backbuffer, nil, m_RenderTargetView);
 
     Backbuffer := nil;
+
+    {$HINTS off}
+    FillChar(DepthDesc, SizeOf(DepthDesc), 0);
+    {$HINTS on}
+    with DepthDesc do
+    begin
+      Width := m_cpProp.Width;
+      Height := m_cpProp.Height;
+      MipLevels := 1;
+      ArraySize := 1;
+      Format := DXGI_FORMAT_D24_UNORM_S8_UINT;
+      SampleDesc.Count := m_cpProp.MSAA;
+      SampleDesc.Quality := D3D11_STANDARD_MULTISAMPLE_PATTERN;
+      Usage := D3D11_USAGE_DEFAULT;
+      BindFlags := Ord(D3D11_BIND_DEPTH_STENCIL);
+      CPUAccessFlags := 0;
+      MiscFlags := 0;
+    end;
+
+    m_Device.CreateTexture2D(DepthDesc, nil, m_DepthStencilBuffer);
+
+    {$HINTS off}
+    FillChar(DepthStateDesc, SizeOf(DepthStateDesc), 0);
+    {$HINTS on}
+    with DepthStateDesc do
+    begin
+      DepthEnable := False;
+
+      DepthWriteMask := D3D11_DEPTH_WRITE_MASK_ZERO;
+      DepthFunc := D3D11_COMPARISON_LESS;
+
+      StencilEnable := True;
+      StencilReadMask := $FF;
+      StencilWriteMask := $FF;
+
+      FrontFace.StencilFailOp := D3D11_STENCIL_OP_KEEP;
+      FrontFace.StencilDepthFailOp := D3D11_STENCIL_OP_INCR;
+      FrontFace.StencilPassOp := D3D11_STENCIL_OP_KEEP;
+      FrontFace.StencilFunc := D3D11_COMPARISON_ALWAYS;
+
+      BackFace.StencilFailOp := D3D11_STENCIL_OP_KEEP;
+      BackFace.StencilDepthFailOp := D3D11_STENCIL_OP_DECR;
+      BackFace.StencilPassOp := D3D11_STENCIL_OP_KEEP;
+      BackFace.StencilFunc := D3D11_COMPARISON_ALWAYS;
+    end;
+
+    m_Device.CreateDepthStencilState(DepthStateDesc, m_DepthStencilState);
+    m_DeviceContext.OMSetDepthStencilState(m_DepthStencilState, 1);
+
+    {$HINTS off}
+    FillChar(DepthViewDesc, SizeOf(DepthViewDesc), 0);
+    {$HINTS on}
+    with DepthViewDesc do
+    begin
+      Format := DXGI_FORMAT_D24_UNORM_S8_UINT;
+      if m_cpProp.MSAA = 1
+        then ViewDimension := D3D11_DSV_DIMENSION_TEXTURE2D
+        else ViewDimension := D3D11_DSV_DIMENSION_TEXTURE2DMS;
+      Texture2D.MipSlice := 0;
+    end;
+
+    m_Device.CreateDepthStencilView(m_DepthStencilBuffer, @DepthViewDesc, m_DepthStencilView);
+    m_DeviceContext.OMSetRenderTargets(1, m_RenderTargetView, m_DepthStencilView);
+
+    {$HINTS off}
+    FillChar(RastStateDesc, SizeOf(RastStateDesc), 0);
+    {$HINTS on}
+    with RastStateDesc do
+    begin
+      AntialiasedLineEnable := True;
+      CullMode := D3D11_CULL_BACK;
+      DepthBias := 0;
+      DepthBiasClamp := 0;
+      DepthClipEnable := True;
+      FillMode := D3D11_FILL_SOLID;
+      FrontCounterClockwise := False;
+      MultisampleEnable := True;
+      ScissorEnable := False;
+      SlopeScaledDepthBias := 0;
+    end;
+
+    m_Device.CreateRasterizerState(RastStateDesc, m_RasterizerState);
+    m_DeviceContext.RSSetState(m_RasterizerState);
 
     {$HINTS off}
     FillChar(m_Viewport, SizeOf(m_Viewport), 0);
