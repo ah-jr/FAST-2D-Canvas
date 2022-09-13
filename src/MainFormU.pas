@@ -15,18 +15,16 @@ uses
   Vcl.Dialogs,
   D3DCanvasU,
   Vcl.ExtCtrls,
-  DXGI,
-  DxgiFormat,
-  DxgiType,
-  Direct3D,
-  D3DCommon,
-  D3D10,
-  D3DX10,
-  D3D11;
+  D3DX11_JSB,
+  D3D11_JSB,
+  DXTypes_JSB,
+  DXGI_JSB,
+  D3DCommon_JSB;
 
 type
   TMainForm = class(TForm)
     pnlD3dCanvas: TPanel;
+
     procedure FormCreate(Sender: TObject);
     procedure FormPaint(Sender: TObject);
     procedure pnlD3dCanvasMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -34,7 +32,15 @@ type
   private
     m_d3dCanvas : TD3DCanvas;
 
+    m_pVertexShader : ID3D11VertexShader;
+    m_pPixelShader  : ID3D11PixelShader;
+    m_pInputLayout  : ID3D11InputLayout;
+    m_pVertexBuffer : ID3D11Buffer;
 
+
+
+    procedure LoadContent;
+    procedure Render;
 
   public
   end;
@@ -62,10 +68,12 @@ begin
 
   m_d3dCanvas := TD3DCanvas.Create(d3dProp);
 
-  RASTERIZER_DESC := D3D11_RASTERIZER_DESC.Create(True);
+  //RASTERIZER_DESC := D3D11_RasterizerDesc.Create(True);
   RASTERIZER_DESC.CullMode := D3D11_CULL_NONE;
   m_d3dCanvas.Device.CreateRasterizerState(RASTERIZER_DESC, ppRasterizerState);
   m_d3dCanvas.DeviceContext.RSSetState(ppRasterizerState);
+
+  LoadContent;
 end;
 
 //==============================================================================
@@ -74,90 +82,58 @@ begin
   //
 end;
 
+
 //==============================================================================
-procedure TMainForm.pnlD3dCanvasMouseMove(Sender: TObject; Shift: TShiftState;
-  X, Y: Integer);
+procedure TMainForm.LoadContent;
+var
+  pVSBuffer : ID3DBlob;
+  d3dLinkage : ID3D11ClassLinkage;
+  shaderInputLayout : array of D3D11_INPUT_ELEMENT_DESC;
+const
+  c_numLayoutElements = 1;
+begin
+  m_d3dCanvas.CompileShader('ShaderGreenColor.fx', 'VS_Main', 'vs_4_0', pVSBuffer);
+
+  m_d3dCanvas.Device.CreateVertexShader(pVSBuffer.GetBufferPointer, pVSBuffer.GetBufferSize, d3dLinkage, m_pVertexShader);
+
+  SetLength(shaderInputLayout, c_numLayoutElements);
+
+  shaderInputLayout[0].SemanticName := 'Position';
+  shaderInputLayout[0].SemanticIndex := 0;
+  shaderInputLayout[0].Format := DXGI_FORMAT_R32G32B32_FLOAT;
+  shaderInputLayout[0].InputSlot := 0;
+  shaderInputLayout[0].AlignedByteOffset := 0;
+  shaderInputLayout[0].InputSlotClass := D3D11_INPUT_PER_VERTEX_DATA;
+  shaderInputLayout[0].InstanceDataStepRate := 0;
+
+  m_d3dCanvas.Device.CreateInputLayout(@shaderInputLayout, c_numLayoutElements, pVSBuffer.GetBufferPointer, pVSBuffer.GetBufferSize, m_pInputLayout);
+
+  pVSBuffer._Release;
+
+
+
+end;
+
+//==============================================================================
+procedure TMainForm.Render;
 var
   BLEND_DESC: D3D11_BLEND_DESC;
   ppBlendState: ID3D11BlendState;
-  stride, offset: UINT;
-  buffer : ID3D11Buffer;
-
-
-
-  Vertexes         : array[0..1] of TD3DVertexA;
-  ArrayIndex       : Integer;
-  VertexBufferSize : UInt;
-  vert_buffer_desc : TD3D11_BUFFER_DESC;
-  vert_subresource : TD3D11_SUBRESOURCE_DATA;
-  Error : HResult;
 begin
-  stride := SizeOf(TD3DVertexA);
-  offset := 0;
-  BLEND_DESC := D3D11_BLEND_DESC.Create(True);
+  //BLEND_DESC := D3D11_BLEND_DESC.Create(True);
 
   m_d3dCanvas.Clear(D3DColor4f(0.0, 1.0, 0.0, 1.0));
   m_d3dCanvas.Device.CreateBlendState(BLEND_DESC, ppBlendState);
   m_d3dCanvas.DeviceContext.OMSetBlendState(ppBlendState, D3DColor4f(1.0, 1.0, 1.0, 1.0), $ffffffff);
 
-
-
-
-
-
-
-
-
-
-  Vertexes[0].x := 0;
-  Vertexes[0].y := 0;
-  Vertexes[0].z := 0;
-  Vertexes[0].Color := D3DColor4f(1,0,0,1);
-
-  Vertexes[1].x := 0;
-  Vertexes[1].y := 0;
-  Vertexes[1].z := 0;
-  Vertexes[1].Color :=  D3DColor4f(1,0,0,1);
-
-  VertexBufferSize := Length(Vertexes) * SizeOf(TD3DVertexA);
-
-  with vert_buffer_desc do
-  begin
-    Usage               := D3D11_USAGE_DEFAULT;
-    ByteWidth           := VertexBufferSize;
-    BindFlags           := Ord(D3D11_BIND_VERTEX_BUFFER);
-    CPUAccessFlags      := 0;
-    MiscFlags           := 0;
-    StructureByteStride := 0;
-  end;
-
-  with vert_subresource do
-  begin
-    pSysMem          := @Vertexes[0];
-    SysMemPitch      := 0;
-    SysMemSlicePitch := 0;
-  end;
-
-   Error:= m_d3dCanvas.Device.CreateBuffer(vert_buffer_desc, @vert_subresource, buffer);
-
-   If Failed(Error) then
-   begin
-     Sleep(1);
-   end;
-
-
-
-
-
-
-//
-//  // set matrix
-//
-  m_d3dCanvas.DeviceContext.IASetVertexBuffers(0, 1, buffer, @stride, @offset);
-  m_d3dCanvas.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-  m_d3dCanvas.DeviceContext.Draw(2, 0);
-
   m_d3dCanvas.Paint;
+end;
+
+//==============================================================================
+procedure TMainForm.pnlD3dCanvasMouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  Render;
 end;
 
 end.

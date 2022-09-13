@@ -8,15 +8,20 @@ uses
   Winapi.DXTypes,
   SysUtils,
   Math,
-  Direct3D,
-  D3D11,
-  DXGI,
-  D3DCommon,
-  D3DX10,
-  D3D10,
-  DxgiFormat,
-  DxgiType;
-
+//  Direct3D,
+//  D3D11,
+//  DXGI,
+//  D3DCommon,
+//  D3DX10,
+//  D3D10,
+//  DxgiFormat,
+//  DxgiType,
+  D3DCompiler,
+  D3DX11_JSB,
+  D3D11_JSB,
+  DXTypes_JSB,
+  DXGI_JSB,
+  D3DCommon_JSB;
 
 type
   TD3DCanvasProperties = record
@@ -26,12 +31,15 @@ type
     MSAA        : Integer;
   end;
 
-  TD3DVertexA = record
-    x, y, z: Single;
-    color: TFourSingleArray;
+  XMFLOAT3 = array [0..2] of Single;
+  XMFLOAT4 = array[0..3] of Single;
+
+  TSimpleVertex = record
+    pos : XMFLOAT3;
+    //color: XMFLOAT3;
   end;
 
-  PD3DVertexA = ^TD3DVertexA;
+  PSimpleVertex = ^TSimpleVertex;
 
   TD3DCanvas = class
   private
@@ -39,7 +47,7 @@ type
   
     m_Device: ID3D11Device;
     m_DeviceContext: ID3D11DeviceContext;
-    m_CurrentFeatureLevel: TD3D_FEATURE_LEVEL;
+    m_CurrentFeatureLevel: TD3D_FeatureLevel;
     m_Swapchain: IDXGISwapChain;
     m_RenderTargetView: ID3D11RenderTargetView;
     m_Viewport: TD3D11_VIEWPORT;
@@ -58,7 +66,9 @@ type
     constructor Create(a_cpProp : TD3DCanvasProperties);
     destructor Destroy; override;
 
-    procedure Clear(a_clColor: TFourSingleArray);
+    function CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; buffer : ID3DBlob) : Boolean;
+
+    procedure Clear(a_clColor: TColorArray);
     procedure Paint;
 
     property Device        : ID3D11Device        read m_Device        write m_Device;
@@ -66,13 +76,13 @@ type
 
   end;
 
-  function D3DColor4f(a_dRed, a_dGreen, a_dBlue, a_dAlpha: Single): TFourSingleArray; inline;
-  function D3DColor4fARGB(a_ARGB: Cardinal): TFourSingleArray; inline;
+  function D3DColor4f(a_dRed, a_dGreen, a_dBlue, a_dAlpha: Single): TColorArray; inline;
+  function D3DColor4fARGB(a_ARGB: Cardinal): TColorArray; inline;
 
 implementation
 
 //==============================================================================
-function D3DColor4f(a_dRed, a_dGreen, a_dBlue, a_dAlpha: Single): TFourSingleArray;
+function D3DColor4f(a_dRed, a_dGreen, a_dBlue, a_dAlpha: Single): TColorArray;
 begin
   Result[0] := a_dRed;
   Result[1] := a_dGreen;
@@ -81,7 +91,7 @@ begin
 end;
 
 //==============================================================================
-function D3DColor4fARGB(a_ARGB: Cardinal): TFourSingleArray;
+function D3DColor4fARGB(a_ARGB: Cardinal): TColorArray;
 begin
   Result[0] := Byte(a_ARGB shr 16) / 255;
   Result[1] := Byte(a_ARGB shr 8) / 255;
@@ -110,17 +120,15 @@ begin
 end;
 
 //==============================================================================
-procedure TD3DCanvas.Clear(a_clColor: TFourSingleArray);
+procedure TD3DCanvas.Clear(a_clColor: TColorArray);
 begin
   m_DeviceContext.ClearRenderTargetView(m_RenderTargetView, a_clColor);
 end;
 
 //==============================================================================
 procedure TD3DCanvas.Paint;
-var
-Error : HResult;
 begin
-  Error:= m_Swapchain.Present(0, 0);
+  m_Swapchain.Present(0, 0);
 end;
 
 //==============================================================================
@@ -140,13 +148,15 @@ end;
 //==============================================================================
 procedure TD3DCanvas.Init;
 var
-  arrFeatureLevel : Array[0..0] of TD3D_FEATURE_LEVEL;
+  arrFeatureLevel : Array[0..2] of TD3D_FeatureLevel;
   Backbuffer      : ID3D11Texture2D;
   SwapchainDesc   : DXGI_SWAP_CHAIN_DESC;
-  DepthDesc       : TD3D11_TEXTURE2D_DESC;
-  DepthStateDesc  : TD3D11_DEPTH_STENCIL_DESC;
-  DepthViewDesc   : TD3D11_DEPTH_STENCIL_VIEW_DESC;
-  RastStateDesc   : TD3D11_RASTERIZER_DESC;
+  DepthDesc       : TD3D11_Texture2DDesc;
+  DepthStateDesc  : TD3D11_DepthStencilDesc;
+  DepthViewDesc   : TD3D11_DepthStencilViewDesc;
+  RastStateDesc   : TD3D11_RasterizerDesc;
+
+  flags : Cardinal;
 begin
   if m_bInitialized then
     Reset;
@@ -161,7 +171,7 @@ begin
     BufferDesc.Width := m_cpProp.Width;
     BufferDesc.Height := m_cpProp.Height;
     BufferDesc.Format := DXGI_FORMAT_R8G8B8A8_UNORM;
-    BufferDesc.RefreshRate.Numerator := 0;
+    BufferDesc.RefreshRate.Numerator := 60;
     BufferDesc.RefreshRate.Denominator := 1;
     BufferDesc.ScanlineOrdering := DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
     BufferDesc.Scaling := DXGI_MODE_SCALING_STRETCHED;
@@ -169,28 +179,32 @@ begin
     BufferUsage := DXGI_USAGE_RENDER_TARGET_OUTPUT;
     OutputWindow := m_cpProp.HWND;
     SampleDesc.Count := m_cpProp.MSAA;
-    SampleDesc.Quality := D3D11_STANDARD_MULTISAMPLE_PATTERN;
+    SampleDesc.Quality := Cardinal(D3D11_STANDARD_MULTISAMPLE_PATTERN);
     Windowed := True;
 
     SwapEffect := DXGI_SWAP_EFFECT_DISCARD;
     Flags := 0;
   end;
 
-  arrFeatureLevel[0] := D3D_FEATURE_LEVEL_11_0;
+  arrFeatureLevel[0] :=  D3D_FEATURE_LEVEL_11_0;
+  arrFeatureLevel[1] :=  D3D_FEATURE_LEVEL_10_1;
+  arrFeatureLevel[2] :=  D3D_FEATURE_LEVEL_10_0;
+
+  flags := Cardinal(D3D11_CREATE_DEVICE_DEBUG);
 
   try
     D3D11CreateDeviceAndSwapChain(
       nil,
       D3D_DRIVER_TYPE_HARDWARE,
       0,
-      0,
-      @arrFeatureLevel[0],
-      1,
+      flags,
+      @arrFeatureLevel,
+      3,
       D3D11_SDK_VERSION,
       @SwapchainDesc,
       m_Swapchain,
       m_Device,
-      m_CurrentFeatureLevel,
+      @m_CurrentFeatureLevel,
       m_DeviceContext);
 
     m_Swapchain.GetBuffer(0, ID3D11Texture2D, Backbuffer);
@@ -209,7 +223,7 @@ begin
       ArraySize := 1;
       Format := DXGI_FORMAT_D24_UNORM_S8_UINT;
       SampleDesc.Count := m_cpProp.MSAA;
-      SampleDesc.Quality := D3D11_STANDARD_MULTISAMPLE_PATTERN;
+      SampleDesc.Quality := Cardinal(D3D11_STANDARD_MULTISAMPLE_PATTERN);
       Usage := D3D11_USAGE_DEFAULT;
       BindFlags := Ord(D3D11_BIND_DEPTH_STENCIL);
       CPUAccessFlags := 0;
@@ -259,7 +273,7 @@ begin
     end;
 
     m_Device.CreateDepthStencilView(m_DepthStencilBuffer, @DepthViewDesc, m_DepthStencilView);
-    m_DeviceContext.OMSetRenderTargets(1, m_RenderTargetView, m_DepthStencilView);
+    m_DeviceContext.OMSetRenderTargets(1, @m_RenderTargetView, m_DepthStencilView);
 
     {$HINTS off}
     FillChar(RastStateDesc, SizeOf(RastStateDesc), 0);
@@ -301,6 +315,25 @@ begin
   end;
 end;
 
+//==============================================================================
+function TD3DCanvas.CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; buffer : ID3DBlob) : Boolean;
+var
+  flags : DWORD;
+  errBuffer : ID3DBlob;
+
+  d3dMacro : TD3D_ShaderMacro;
+  d3dInclude : ID3DInclude;
+  d3dThreadPump : ID3DX11ThreadPump;
+
+  hr : HRESULT;
+begin
+  flags := D3DCOMPILE_ENABLE_STRICTNESS or D3DCOMPILE_DEBUG;
+
+  hr := D3DX11CompileFromFile(szFilePath, d3dMacro, d3dInclude, szFunc, szShaderModel, flags, 0, d3dThreadPump, buffer, errBuffer, 0);
+
+  if errBuffer <> nil then
+    errBuffer._Release;
+end;
 
 //==============================================================================
 end.
