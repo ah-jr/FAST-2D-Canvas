@@ -44,7 +44,7 @@ begin
 
   //////////////////////////////////////////////////////////////////////////////
   ///  Create canvas
-  m_f2dCanvas := TF2DCanvas.Create(f2dProp
+  m_f2dCanvas := TF2DCanvas.Create(f2dProp);
   
 end;
 ```
