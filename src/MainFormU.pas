@@ -57,7 +57,7 @@ implementation
 procedure TMainForm.FormCreate(Sender: TObject);
 var
   d3dProp : TD3DCanvasProperties;
-  RASTERIZER_DESC: D3D11_RASTERIZER_DESC;
+  RASTERIZER_DESC: Winapi.D3D11.D3D11_RASTERIZER_DESC;
   ppRasterizerState: ID3D11RasterizerState;
 begin
   with d3dProp do
@@ -70,10 +70,10 @@ begin
 
   m_d3dCanvas := TD3DCanvas.Create(d3dProp);
 
-  //RASTERIZER_DESC := D3D11_RasterizerDesc.Create(True);
-  RASTERIZER_DESC.CullMode := D3D11_CULL_NONE;
-  m_d3dCanvas.Device.CreateRasterizerState(RASTERIZER_DESC, ppRasterizerState);
-  m_d3dCanvas.DeviceContext.RSSetState(ppRasterizerState);
+//  RASTERIZER_DESC := Winapi.D3D11.D3D11_Rasterizer_Desc.Create(True);
+//  RASTERIZER_DESC.CullMode := Winapi.D3D11.D3D11_CULL_NONE;
+//  m_d3dCanvas.Device.CreateRasterizerState(D3D11_RASTERIZER_DESC(RASTERIZER_DESC), ppRasterizerState);
+//  m_d3dCanvas.DeviceContext.RSSetState(ppRasterizerState);
 
   LoadContent;
 end;
@@ -91,7 +91,7 @@ var
   pVSBuffer : Winapi.D3DCommon.ID3DBlob;
   pPSBuffer : Winapi.D3DCommon.ID3DBlob;
   d3dLinkage : ID3D11ClassLinkage;
-  shaderInputLayout : array of D3D11_INPUT_ELEMENT_DESC;
+  shaderInputLayout : TD3D11_InputElementDesc;
 
   vertices : array of TSimpleVertex;
 
@@ -104,15 +104,15 @@ begin
   m_d3dCanvas.CompileShader('ShaderGreenColor.fx', 'VS_Main', 'vs_4_0', pVSBuffer);
   m_d3dCanvas.Device.CreateVertexShader(pVSBuffer.GetBufferPointer, pVSBuffer.GetBufferSize, d3dLinkage, m_pVertexShader);
 
-  SetLength(shaderInputLayout, c_numLayoutElements);
+  //SetLength(shaderInputLayout, c_numLayoutElements);
 
-  shaderInputLayout[0].SemanticName := 'Position';
-  shaderInputLayout[0].SemanticIndex := 0;
-  shaderInputLayout[0].Format := DXGI_FORMAT_R32G32B32_FLOAT;
-  shaderInputLayout[0].InputSlot := 0;
-  shaderInputLayout[0].AlignedByteOffset := 0;
-  shaderInputLayout[0].InputSlotClass := D3D11_INPUT_PER_VERTEX_DATA;
-  shaderInputLayout[0].InstanceDataStepRate := 0;
+  shaderInputLayout.SemanticName := 'Position';
+  shaderInputLayout.SemanticIndex := 0;
+  shaderInputLayout.Format := DXGI_FORMAT_R32G32B32_FLOAT;
+  shaderInputLayout.InputSlot := 0;
+  shaderInputLayout.AlignedByteOffset := 0;
+  shaderInputLayout.InputSlotClass := D3D11_INPUT_PER_VERTEX_DATA;
+  shaderInputLayout.InstanceDataStepRate := 0;
 
   m_d3dCanvas.Device.CreateInputLayout(@shaderInputLayout, c_numLayoutElements, pVSBuffer.GetBufferPointer, pVSBuffer.GetBufferSize, m_pInputLayout);
 
@@ -137,10 +137,13 @@ begin
   vertices[2].pos[1] := -0.5;
   vertices[2].pos[2] := 0.5;
 
+  ZeroMemory(@vertexDesc, sizeof(vertexDesc));
+
   vertexDesc.Usage := D3D11_USAGE_DEFAULT;
   vertexDesc.BindFlags := Cardinal(D3D11_BIND_VERTEX_BUFFER);
   vertexDesc.ByteWidth := sizeof(TSimpleVertex) * 3 ;
 
+  ZeroMemory(@resourceData, sizeof(resourceData));
   resourceData.pSysMem := vertices;
 
   m_d3dCanvas.Device.CreateBuffer(vertexDesc, @resourceData, m_pVertexBuffer);
@@ -153,11 +156,11 @@ var
   ppBlendState: ID3D11BlendState;
   stride, offset : UINT;
 begin
-  BLEND_DESC := D3D11.D3D11_BLEND_DESC.Create(True);
+  //BLEND_DESC := D3D11.D3D11_BLEND_DESC.Create(True);
 
   m_d3dCanvas.Clear(D3DColor4f(0.0, 1.0, 0.0, 1.0));
-  m_d3dCanvas.Device.CreateBlendState(TD3D11_BlendDesc(BLEND_DESC), ppBlendState);
-  m_d3dCanvas.DeviceContext.OMSetBlendState(ppBlendState, D3DColor4f(1.0, 1.0, 1.0, 1.0), $ffffffff);
+  //m_d3dCanvas.Device.CreateBlendState(TD3D11_BlendDesc(BLEND_DESC), ppBlendState);
+  //m_d3dCanvas.DeviceContext.OMSetBlendState(ppBlendState, D3DColor4f(1.0, 1.0, 1.0, 1.0), $ffffffff);
 
   stride := sizeof(TSimpleVertex);
   offset := 0;
