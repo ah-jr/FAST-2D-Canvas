@@ -39,11 +39,14 @@ type
     m_pVertexBuffer : ID3D11Buffer;
     m_pScreenBuffer : ID3D11Buffer;
 
+    m_pBlendDesc : ID3D11BlendState;
+
     m_matProj : TXMMATRIX;
 
 
-
     procedure LoadContent;
+
+    procedure Start;
     procedure Render;
 
   public
@@ -101,11 +104,17 @@ var
   viewport : D3D11_VIEWPORT;
   numViewports : UINT;
   mappedResource : D3D11_MAPPED_SUBRESOURCE;
+
+
+  blendDesc: TD3D11_Blend_Desc;
 const
   c_numLayoutElements = 2;
 begin
   m_d3dCanvas.CompileShader('ScreenCoordinates.fx', 'VS_Main', 'vs_4_0', pVSBuffer);
+  m_d3dCanvas.CompileShader('ScreenCoordinates.fx', 'PS_Main', 'ps_4_0', pPSBuffer);
+
   m_d3dCanvas.Device.CreateVertexShader(pVSBuffer.GetBufferPointer, pVSBuffer.GetBufferSize, d3dLinkage, @m_pVertexShader);
+  m_d3dCanvas.Device.CreatePixelShader(pPSBuffer.GetBufferPointer, pPSBuffer.GetBufferSize, d3dLinkage, m_pPixelShader);
 
   shaderInputLayout[0].SemanticName := 'POSITION';
   shaderInputLayout[0].SemanticIndex := 0;
@@ -126,11 +135,58 @@ begin
   m_d3dCanvas.Device.CreateInputLayout(@shaderInputLayout, c_numLayoutElements, pVSBuffer.GetBufferPointer, pVSBuffer.GetBufferSize, m_pInputLayout);
 
   pVSBuffer := nil;
-
-  m_d3dCanvas.CompileShader('ScreenCoordinates.fx', 'PS_Main', 'ps_4_0', pPSBuffer);
-  m_d3dCanvas.Device.CreatePixelShader(pPSBuffer.GetBufferPointer, pPSBuffer.GetBufferSize, d3dLinkage, m_pPixelShader);
-
   pPSBuffer := nil;
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///  Blend
+  blendDesc.RenderTarget[0].BlendEnable := True;
+	blendDesc.RenderTarget[0].SrcBlend := D3D11_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend := D3D11_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].SrcBlendAlpha := D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha := D3D11_BLEND_ZERO;
+	blendDesc.RenderTarget[0].BlendOp := D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].BlendOpAlpha := D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask := UINT8(D3D11_COLOR_WRITE_ENABLE_ALL);
+
+  m_d3dCanvas.Device.CreateBlendState(blendDesc, m_pBlendDesc);
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///  Vertex Buffer
+  ZeroMemory(@bufferDesc, Sizeof(bufferDesc));
+
+	bufferDesc.Usage := D3D11_USAGE_DYNAMIC;
+	bufferDesc.ByteWidth := Sizeof(TSimpleVertex) * 3;
+	bufferDesc.BindFlags := D3D11_BIND_VERTEX_BUFFER;
+	bufferDesc.CPUAccessFlags := D3D11_CPU_ACCESS_WRITE;
+	bufferDesc.MiscFlags := 0;
+
+  m_d3dCanvas.Device.CreateBuffer(bufferDesc, nil, m_pVertexBuffer);
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///  Screen Buffer
+  ZeroMemory(@bufferDesc, Sizeof(bufferDesc));
+
+	bufferDesc.Usage := D3D11_USAGE_DYNAMIC;
+	bufferDesc.ByteWidth := Sizeof(TXMMATRIX);
+	bufferDesc.BindFlags := D3D11_BIND_CONSTANT_BUFFER;
+	bufferDesc.CPUAccessFlags := D3D11_CPU_ACCESS_WRITE;
+	bufferDesc.MiscFlags := 0;
+
+  m_d3dCanvas.Device.CreateBuffer(bufferDesc, nil, m_pScreenBuffer);
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///  View Port
+ 	numViewports := 1;
+
+	m_d3dCanvas.DeviceContext.RSGetViewports(numViewports, @viewport);
+
+	m_matProj := XMMatrixOrthographicOffCenterLH(viewport.TopLeftX, viewport.Width, viewport.Height, viewport.TopLeftY,
+		viewport.MinDepth, viewport.MaxDepth);
+
+  m_d3dCanvas.DeviceContext.Map(m_pScreenBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedResource);
+  CopyMemory(@mappedResource, @m_matProj, SizeOf(TXMMATRIX));
+  m_d3dCanvas.DeviceContext.Unmap(m_pScreenBuffer, 0);
+
 
   SetLength(vertices, 3);
 
@@ -161,78 +217,38 @@ begin
   vertices[0].color[1] := 1;
   vertices[0].color[2] := 1;
   vertices[0].color[3] := 1;
-
-
-  ZeroMemory(@bufferDesc, Sizeof(bufferDesc));
-
-	bufferDesc.Usage := D3D11_USAGE_DYNAMIC;
-	bufferDesc.ByteWidth := Sizeof(TSimpleVertex) * 3;
-	bufferDesc.BindFlags := D3D11_BIND_VERTEX_BUFFER;
-	bufferDesc.CPUAccessFlags := D3D11_CPU_ACCESS_WRITE;
-	bufferDesc.MiscFlags := 0;
-
-  m_d3dCanvas.Device.CreateBuffer(bufferDesc, nil, m_pVertexBuffer);
-
-
-  ZeroMemory(@bufferDesc, Sizeof(bufferDesc));
-
-	bufferDesc.Usage := D3D11_USAGE_DYNAMIC;
-	bufferDesc.ByteWidth := Sizeof(TXMMATRIX);
-	bufferDesc.BindFlags := D3D11_BIND_CONSTANT_BUFFER;
-	bufferDesc.CPUAccessFlags := D3D11_CPU_ACCESS_WRITE;
-	bufferDesc.MiscFlags := 0;
-
-  m_d3dCanvas.Device.CreateBuffer(bufferDesc, nil, m_pScreenBuffer);
-
-	numViewports := 1;
-
-	m_d3dCanvas.DeviceContext.RSGetViewports(&numViewports, @viewport);
-
-	m_matProj := XMMatrixOrthographicOffCenterLH(viewport.TopLeftX, viewport.Width, viewport.Height, viewport.TopLeftY,
-		viewport.MinDepth, viewport.MaxDepth);
-
-  CopyMemory(@mappedResource, @m_matProj, SizeOf(TXMMATRIX));
-
-  m_d3dCanvas.DeviceContext.Map(m_pScreenBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedResource);
-  m_d3dCanvas.DeviceContext.Unmap(m_pScreenBuffer, 0);
 end;
 
 //==============================================================================
-procedure TMainForm.Render;
+procedure TMainForm.Start;
 var
-  blendDesc: TD3D11_Blend_Desc;
-  ppBlendState: ID3D11BlendState;
-  d3dClass : ID3D11ClassInstance;
   stride, offset : UINT;
 begin
-  blendDesc := TD3D11_Blend_Desc.Create(True);
+	m_d3dCanvas.DeviceContext.VSSetShader(m_pVertexShader, nil, 0);
+	m_d3dCanvas.DeviceContext.PSSetShader(m_pPixelShader, nil, 0);
 
-  blendDesc.RenderTarget[0].BlendEnable := True;
-	blendDesc.RenderTarget[0].SrcBlend := D3D11_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].DestBlend := D3D11_BLEND_INV_SRC_ALPHA;
-	blendDesc.RenderTarget[0].SrcBlendAlpha := D3D11_BLEND_ONE;
-	blendDesc.RenderTarget[0].DestBlendAlpha := D3D11_BLEND_ZERO;
-	blendDesc.RenderTarget[0].BlendOp := D3D11_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].BlendOpAlpha := D3D11_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].RenderTargetWriteMask := UINT8(D3D11_COLOR_WRITE_ENABLE_ALL);
+	m_d3dCanvas.DeviceContext.OMSetBlendState(m_pBlendDesc, D3DColor4f(1.0, 1.0, 1.0, 1.0), $ffffffff);
 
+	m_d3dCanvas.DeviceContext.VSSetConstantBuffers(0, 1, m_pScreenBuffer);
+
+	m_d3dCanvas.DeviceContext.IASetInputLayout(m_pInputLayout);
+
+	stride := SizeOf(TSimpleVertex);
+	offset := 0;
+	m_d3dCanvas.DeviceContext.IASetVertexBuffers(0, 1, &m_pVertexBuffer, @stride, @offset);
+
+	//fontWrapper->DrawString(m_d3dCanvas.DeviceContext, L"", 0.0f, 0.0f, 0.0f, 0xff000000, FW1_RESTORESTATE | FW1_NOFLUSH);
+end;
+
+
+//==============================================================================
+procedure TMainForm.Render;
+begin
   m_d3dCanvas.Clear(D3DColor4f(0.0, 0.0, 0.0, 1.0));
-  m_d3dCanvas.Device.CreateBlendState(blendDesc, ppBlendState);
-  m_d3dCanvas.DeviceContext.OMSetBlendState(ppBlendState, D3DColor4f(1.0, 1.0, 1.0, 1.0), $ffffffff);
-
-  stride := sizeof(TSimpleVertex);
-  offset := 0;
-
-  m_d3dCanvas.DeviceContext.IASetInputLayout(m_pInputLayout);
-  m_d3dCanvas.DeviceContext.IASetVertexBuffers(0, 1, m_pVertexBuffer, @stride, @offset);
-  m_d3dCanvas.DeviceContext.VSSetConstantBuffers(0, 1, m_pScreenBuffer);
   m_d3dCanvas.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
-  m_d3dCanvas.DeviceContext.VSSetShader(m_pVertexShader, d3dClass, 0);
-  m_d3dCanvas.DeviceContext.PSSetShader(m_pPixelShader, d3dClass, 0);
 
   m_d3dCanvas.DeviceContext.Draw(3, 0);
-
   m_d3dCanvas.Paint;
 end;
 
@@ -240,6 +256,8 @@ end;
 procedure TMainForm.pnlD3dCanvasMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
+  Start;
+
   Render;
 end;
 
