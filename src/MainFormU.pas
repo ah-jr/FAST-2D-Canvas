@@ -134,17 +134,18 @@ begin
 
   SetLength(vertices, 3);
 
-  vertices[0].pos[0] := 10;
-  vertices[0].pos[1] := 10;
-  vertices[0].pos[2] := 10;
+  vertices[0].pos[0] := 1;
+  vertices[0].pos[1] := 1;
+  vertices[0].pos[2] := 0;
+
 
   vertices[1].pos[0] := 10;
-  vertices[1].pos[1] := 100;
-  vertices[1].pos[2] := 100;
+  vertices[1].pos[1] := 10;
+  vertices[1].pos[2] := 0;
 
-  vertices[2].pos[0] := -100;
-  vertices[2].pos[1] := -100;
-  vertices[2].pos[2] := -100;
+  vertices[2].pos[0] := 20;
+  vertices[2].pos[1] := 20;
+  vertices[2].pos[2] := 0;
 
   vertices[0].color[0] := 1;
   vertices[0].color[1] := 1;
@@ -190,6 +191,8 @@ begin
 	m_matProj := XMMatrixOrthographicOffCenterLH(viewport.TopLeftX, viewport.Width, viewport.Height, viewport.TopLeftY,
 		viewport.MinDepth, viewport.MaxDepth);
 
+  CopyMemory(@mappedResource, @m_matProj, SizeOf(TXMMATRIX));
+
   m_d3dCanvas.DeviceContext.Map(m_pScreenBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedResource);
   m_d3dCanvas.DeviceContext.Unmap(m_pScreenBuffer, 0);
 end;
@@ -222,7 +225,8 @@ begin
 
   m_d3dCanvas.DeviceContext.IASetInputLayout(m_pInputLayout);
   m_d3dCanvas.DeviceContext.IASetVertexBuffers(0, 1, m_pVertexBuffer, @stride, @offset);
-  m_d3dCanvas.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
+  m_d3dCanvas.DeviceContext.VSSetConstantBuffers(0, 1, m_pScreenBuffer);
+  m_d3dCanvas.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
   m_d3dCanvas.DeviceContext.VSSetShader(m_pVertexShader, d3dClass, 0);
   m_d3dCanvas.DeviceContext.PSSetShader(m_pPixelShader, d3dClass, 0);
