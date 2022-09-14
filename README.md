@@ -53,11 +53,8 @@ For drawing, use BeginDraw and EndDraw calls:
 
 ```
   m_f2dCanvas.BeginDraw;
-
-  // Clear background
+  
   m_f2dCanvas.Clear($FF000000);
-
-  // Write 'Lines' with lines
   m_f2dCanvas.DrawLine(PointF(10, 10), PointF(200, 200), $FFFF0000, 1);
 
   m_f2dCanvas.EndDraw;
