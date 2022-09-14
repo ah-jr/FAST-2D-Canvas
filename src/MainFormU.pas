@@ -9,11 +9,12 @@ uses
   System.Variants,
   System.Classes,
   Vcl.Graphics,
+  Vcl.ExtCtrls,
   Vcl.Controls,
   Vcl.Forms,
   Vcl.Dialogs,
   D3DCanvasU,
-  Vcl.ExtCtrls,
+  FastD3DMathU,
   D3D11,
   DXGI,
   DxgiType,
@@ -37,6 +38,8 @@ type
     m_pInputLayout  : ID3D11InputLayout;
     m_pVertexBuffer : ID3D11Buffer;
     m_pScreenBuffer : ID3D11Buffer;
+
+    m_matProj : TXMMATRIX;
 
 
 
@@ -95,6 +98,9 @@ var
   vertices : array of TSimpleVertex;
 
   bufferDesc : TD3D11_Buffer_Desc;
+  viewport : D3D11_VIEWPORT;
+  numViewports : UINT;
+  mappedResource : D3D11_MAPPED_SUBRESOURCE;
 const
   c_numLayoutElements = 2;
 begin
@@ -156,10 +162,10 @@ begin
   vertices[0].color[3] := 1;
 
 
-  ZeroMemory(@bufferDesc, sizeof(bufferDesc));
+  ZeroMemory(@bufferDesc, Sizeof(bufferDesc));
 
 	bufferDesc.Usage := D3D11_USAGE_DYNAMIC;
-	bufferDesc.ByteWidth := sizeof(TSimpleVertex) * 3;
+	bufferDesc.ByteWidth := Sizeof(TSimpleVertex) * 3;
 	bufferDesc.BindFlags := D3D11_BIND_VERTEX_BUFFER;
 	bufferDesc.CPUAccessFlags := D3D11_CPU_ACCESS_WRITE;
 	bufferDesc.MiscFlags := 0;
@@ -167,15 +173,25 @@ begin
   m_d3dCanvas.Device.CreateBuffer(bufferDesc, nil, m_pVertexBuffer);
 
 
-  ZeroMemory(@bufferDesc, sizeof(bufferDesc));
+  ZeroMemory(@bufferDesc, Sizeof(bufferDesc));
 
 	bufferDesc.Usage := D3D11_USAGE_DYNAMIC;
-	bufferDesc.ByteWidth := sizeof(XMMATRIX);
+	bufferDesc.ByteWidth := Sizeof(TXMMATRIX);
 	bufferDesc.BindFlags := D3D11_BIND_CONSTANT_BUFFER;
 	bufferDesc.CPUAccessFlags := D3D11_CPU_ACCESS_WRITE;
 	bufferDesc.MiscFlags := 0;
 
   m_d3dCanvas.Device.CreateBuffer(bufferDesc, nil, m_pScreenBuffer);
+
+	numViewports := 1;
+
+	m_d3dCanvas.DeviceContext.RSGetViewports(&numViewports, @viewport);
+
+	m_matProj := XMMatrixOrthographicOffCenterLH(viewport.TopLeftX, viewport.Width, viewport.Height, viewport.TopLeftY,
+		viewport.MinDepth, viewport.MaxDepth);
+
+  m_d3dCanvas.DeviceContext.Map(m_pScreenBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedResource);
+  m_d3dCanvas.DeviceContext.Unmap(m_pScreenBuffer, 0);
 end;
 
 //==============================================================================
