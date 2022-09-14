@@ -8,21 +8,15 @@ uses
   Winapi.DXTypes,
   SysUtils,
   Math,
-//  Direct3D,
-//  D3D11,
-//  DXGI,
-//  D3DCommon,
-//  D3DX10,
-//  D3D10,
-//  DxgiFormat,
-//  DxgiType,
-  D3DCompiler,
+  Direct3D,
+  D3D11,
+  DXGI,
   D3DCommon,
-  D3DX11_JSB,
-  D3D11_JSB,
-  DXTypes_JSB,
-  DXGI_JSB,
-  D3DCommon_JSB;
+  D3DX10,
+  D3D10,
+  DxgiFormat,
+  DxgiType,
+  D3DCompiler;
 
 type
   TD3DCanvasProperties = record
@@ -32,11 +26,11 @@ type
     MSAA        : Integer;
   end;
 
-  XMFLOAT3 = array [0..2] of Single;
-  XMFLOAT4 = array[0..3] of Single;
+  T3DSingleArray = array [0..2] of Single;
+  TFourSingleArray = array[0..3] of Single;
 
   TSimpleVertex = record
-    pos : XMFLOAT3;
+    pos : T3DSingleArray;
     //color: XMFLOAT3;
   end;
 
@@ -48,7 +42,7 @@ type
   
     m_Device: ID3D11Device;
     m_DeviceContext: ID3D11DeviceContext;
-    m_CurrentFeatureLevel: TD3D_FeatureLevel;
+    m_CurrentFeatureLevel: TD3D_Feature_Level;
     m_Swapchain: IDXGISwapChain;
     m_RenderTargetView: ID3D11RenderTargetView;
     m_Viewport: TD3D11_VIEWPORT;
@@ -69,7 +63,7 @@ type
 
     function CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; out buffer : Winapi.D3DCommon.ID3DBlob) : Boolean;
 
-    procedure Clear(a_clColor: TColorArray);
+    procedure Clear(a_clColor: TFourSingleArray);
     procedure Paint;
 
     property Device        : ID3D11Device        read m_Device        write m_Device;
@@ -77,13 +71,13 @@ type
 
   end;
 
-  function D3DColor4f(a_dRed, a_dGreen, a_dBlue, a_dAlpha: Single): TColorArray; inline;
-  function D3DColor4fARGB(a_ARGB: Cardinal): TColorArray; inline;
+  function D3DColor4f(a_dRed, a_dGreen, a_dBlue, a_dAlpha: Single): TFourSingleArray; inline;
+  function D3DColor4fARGB(a_ARGB: Cardinal): TFourSingleArray; inline;
 
 implementation
 
 //==============================================================================
-function D3DColor4f(a_dRed, a_dGreen, a_dBlue, a_dAlpha: Single): TColorArray;
+function D3DColor4f(a_dRed, a_dGreen, a_dBlue, a_dAlpha: Single): TFourSingleArray;
 begin
   Result[0] := a_dRed;
   Result[1] := a_dGreen;
@@ -92,7 +86,7 @@ begin
 end;
 
 //==============================================================================
-function D3DColor4fARGB(a_ARGB: Cardinal): TColorArray;
+function D3DColor4fARGB(a_ARGB: Cardinal): TFourSingleArray;
 begin
   Result[0] := Byte(a_ARGB shr 16) / 255;
   Result[1] := Byte(a_ARGB shr 8) / 255;
@@ -121,9 +115,9 @@ begin
 end;
 
 //==============================================================================
-procedure TD3DCanvas.Clear(a_clColor: TColorArray);
+procedure TD3DCanvas.Clear(a_clColor: TFourSingleArray);
 begin
-  m_DeviceContext.ClearRenderTargetView(m_RenderTargetView, a_clColor);
+  m_DeviceContext.ClearRenderTargetView(m_RenderTargetView, D3D11.TFourSingleArray(a_clColor));
 end;
 
 //==============================================================================
@@ -149,13 +143,13 @@ end;
 //==============================================================================
 procedure TD3DCanvas.Init;
 var
-  arrFeatureLevel : Array[0..2] of TD3D_FeatureLevel;
+  arrFeatureLevel : Array[0..2] of TD3D_Feature_Level;
   Backbuffer      : ID3D11Texture2D;
   SwapchainDesc   : DXGI_SWAP_CHAIN_DESC;
-  DepthDesc       : TD3D11_Texture2DDesc;
-  DepthStateDesc  : TD3D11_DepthStencilDesc;
-  DepthViewDesc   : TD3D11_DepthStencilViewDesc;
-  RastStateDesc   : TD3D11_RasterizerDesc;
+  DepthDesc       : TD3D11_Texture2D_Desc;
+  DepthStateDesc  : TD3D11_Depth_Stencil_Desc;
+  DepthViewDesc   : TD3D11_Depth_Stencil_View_Desc;
+  RastStateDesc   : TD3D11_Rasterizer_Desc;
 
   flags : Cardinal;
 begin
@@ -205,7 +199,7 @@ begin
       @SwapchainDesc,
       m_Swapchain,
       m_Device,
-      @m_CurrentFeatureLevel,
+      m_CurrentFeatureLevel,
       m_DeviceContext);
 
     m_Swapchain.GetBuffer(0, ID3D11Texture2D, Backbuffer);
@@ -274,7 +268,7 @@ begin
     end;
 
     m_Device.CreateDepthStencilView(m_DepthStencilBuffer, @DepthViewDesc, m_DepthStencilView);
-    m_DeviceContext.OMSetRenderTargets(1, @m_RenderTargetView, m_DepthStencilView);
+    m_DeviceContext.OMSetRenderTargets(1, m_RenderTargetView, m_DepthStencilView);
 
     {$HINTS off}
     FillChar(RastStateDesc, SizeOf(RastStateDesc), 0);
@@ -321,11 +315,6 @@ function TD3DCanvas.CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShade
 var
   flags : DWORD;
   errBuffer : Winapi.D3DCommon.ID3DBlob;
-
-  d3dMacro : LPD3D_SHADER_MACRO;
-  d3dInclude : Winapi.D3DCommon.ID3DInclude;
-  d3dThreadPump : ID3DX11ThreadPump;
-
   hr : HRESULT;
 begin
   flags := D3DCOMPILE_ENABLE_STRICTNESS or D3DCOMPILE_DEBUG;

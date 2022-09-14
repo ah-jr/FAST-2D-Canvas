@@ -5,7 +5,6 @@ interface
 uses
   Winapi.Windows,
   Winapi.Messages,
-  Winapi.DXTypes,
   System.SysUtils,
   System.Variants,
   System.Classes,
@@ -15,12 +14,11 @@ uses
   Vcl.Dialogs,
   D3DCanvasU,
   Vcl.ExtCtrls,
-  D3DX11_JSB,
   D3D11,
-  D3D11_JSB,
-  DXTypes_JSB,
-  DXGI_JSB,
-  D3DCommon_JSB,
+  DXGI,
+  DxgiType,
+  DxgiFormat,
+  DXTypes,
   D3DCommon;
 
 type
@@ -88,21 +86,21 @@ end;
 //==============================================================================
 procedure TMainForm.LoadContent;
 var
-  pVSBuffer : Winapi.D3DCommon.ID3DBlob;
-  pPSBuffer : Winapi.D3DCommon.ID3DBlob;
+  pVSBuffer : ID3DBlob;
+  pPSBuffer : ID3DBlob;
   d3dLinkage : ID3D11ClassLinkage;
-  shaderInputLayout : TD3D11_InputElementDesc;
+  shaderInputLayout : TD3D11_Input_Element_Desc;
 
   vertices : array of TSimpleVertex;
 
-  vertexDesc : D3D11_BUFFER_DESC;
+  vertexDesc : TD3D11_Buffer_Desc;
 
-  resourceData : D3D11_SUBRESOURCE_DATA;
+  resourceData : TD3D11_Subresource_Data;
 const
   c_numLayoutElements = 1;
 begin
   m_d3dCanvas.CompileShader('ShaderGreenColor.fx', 'VS_Main', 'vs_4_0', pVSBuffer);
-  m_d3dCanvas.Device.CreateVertexShader(pVSBuffer.GetBufferPointer, pVSBuffer.GetBufferSize, d3dLinkage, m_pVertexShader);
+  m_d3dCanvas.Device.CreateVertexShader(pVSBuffer.GetBufferPointer, pVSBuffer.GetBufferSize, d3dLinkage, @m_pVertexShader);
 
   //SetLength(shaderInputLayout, c_numLayoutElements);
 
@@ -154,6 +152,7 @@ procedure TMainForm.Render;
 var
   BLEND_DESC: D3D11.D3D11_BLEND_DESC;
   ppBlendState: ID3D11BlendState;
+  d3dClass : ID3D11ClassInstance;
   stride, offset : UINT;
 begin
   //BLEND_DESC := D3D11.D3D11_BLEND_DESC.Create(True);
@@ -166,11 +165,11 @@ begin
   offset := 0;
 
   m_d3dCanvas.DeviceContext.IASetInputLayout(m_pInputLayout);
-  m_d3dCanvas.DeviceContext.IASetVertexBuffers(0, 1, @m_pVertexBuffer, @stride, @offset);
-  m_d3dCanvas.DeviceContext.IASetPrimitiveTopology(TD3D11_PrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP));
+  m_d3dCanvas.DeviceContext.IASetVertexBuffers(0, 1, m_pVertexBuffer, @stride, @offset);
+  m_d3dCanvas.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
 
-  m_d3dCanvas.DeviceContext.VSSetShader(m_pVertexShader, 0, 0);
-  m_d3dCanvas.DeviceContext.PSSetShader(m_pPixelShader, 0, 0);
+  m_d3dCanvas.DeviceContext.VSSetShader(m_pVertexShader, d3dClass, 0);
+  m_d3dCanvas.DeviceContext.PSSetShader(m_pPixelShader, d3dClass, 0);
 
   m_d3dCanvas.DeviceContext.Draw(3, 0);
 
