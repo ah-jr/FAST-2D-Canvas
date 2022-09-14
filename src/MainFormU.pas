@@ -47,6 +47,9 @@ type
     procedure LoadContent;
 
     procedure Start;
+    //procedure DrawLine;
+    procedure Draw;
+
     procedure Render;
 
   public
@@ -98,8 +101,6 @@ var
   d3dLinkage : ID3D11ClassLinkage;
   shaderInputLayout : array[0..1] of TD3D11_Input_Element_Desc;
 
-  vertices : array of TSimpleVertex;
-
   bufferDesc : TD3D11_Buffer_Desc;
   viewport : D3D11_VIEWPORT;
   numViewports : UINT;
@@ -107,6 +108,7 @@ var
 
 
   blendDesc: TD3D11_Blend_Desc;
+  resourceData : TD3D11_SUBRESOURCE_DATA;
 const
   c_numLayoutElements = 2;
 begin
@@ -139,6 +141,8 @@ begin
 
   //////////////////////////////////////////////////////////////////////////////
   ///  Blend
+  blendDesc := TD3D11_Blend_Desc.Create(True);
+
   blendDesc.RenderTarget[0].BlendEnable := True;
 	blendDesc.RenderTarget[0].SrcBlend := D3D11_BLEND_SRC_ALPHA;
 	blendDesc.RenderTarget[0].DestBlend := D3D11_BLEND_INV_SRC_ALPHA;
@@ -160,6 +164,41 @@ begin
 	bufferDesc.CPUAccessFlags := D3D11_CPU_ACCESS_WRITE;
 	bufferDesc.MiscFlags := 0;
 
+
+//  SetLength(vertices, 3);
+//
+//  vertices[0].pos[0] := 1;
+//  vertices[0].pos[1] := 1;
+//  vertices[0].pos[2] := 1;
+//
+//
+//  vertices[1].pos[0] := 10;
+//  vertices[1].pos[1] := 10;
+//  vertices[1].pos[2] := 1;
+//
+//  vertices[2].pos[0] := 20;
+//  vertices[2].pos[1] := 20;
+//  vertices[2].pos[2] := 1;
+//
+//  vertices[0].color[0] := 1;
+//  vertices[0].color[1] := 1;
+//  vertices[0].color[2] := 1;
+//  vertices[0].color[3] := 1;
+//
+//  vertices[0].color[0] := 1;
+//  vertices[0].color[1] := 1;
+//  vertices[0].color[2] := 1;
+//  vertices[0].color[3] := 1;
+//
+//  vertices[0].color[0] := 1;
+//  vertices[0].color[1] := 1;
+//  vertices[0].color[2] := 1;
+//  vertices[0].color[3] := 1;
+
+//  ZeroMemory(@resourceData, sizeof(resourceData));
+//  resourceData.pSysMem := vertices;
+
+//  m_d3dCanvas.Device.CreateBuffer(bufferDesc, @resourceData, m_pVertexBuffer);
   m_d3dCanvas.Device.CreateBuffer(bufferDesc, nil, m_pVertexBuffer);
 
   //////////////////////////////////////////////////////////////////////////////
@@ -184,39 +223,8 @@ begin
 		viewport.MinDepth, viewport.MaxDepth);
 
   m_d3dCanvas.DeviceContext.Map(m_pScreenBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedResource);
-  CopyMemory(@mappedResource, @m_matProj, SizeOf(TXMMATRIX));
+  CopyMemory(mappedResource.pData, @m_matProj, SizeOf(TXMMATRIX));
   m_d3dCanvas.DeviceContext.Unmap(m_pScreenBuffer, 0);
-
-
-  SetLength(vertices, 3);
-
-  vertices[0].pos[0] := 1;
-  vertices[0].pos[1] := 1;
-  vertices[0].pos[2] := 0;
-
-
-  vertices[1].pos[0] := 10;
-  vertices[1].pos[1] := 10;
-  vertices[1].pos[2] := 0;
-
-  vertices[2].pos[0] := 20;
-  vertices[2].pos[1] := 20;
-  vertices[2].pos[2] := 0;
-
-  vertices[0].color[0] := 1;
-  vertices[0].color[1] := 1;
-  vertices[0].color[2] := 1;
-  vertices[0].color[3] := 1;
-
-  vertices[0].color[0] := 1;
-  vertices[0].color[1] := 1;
-  vertices[0].color[2] := 1;
-  vertices[0].color[3] := 1;
-
-  vertices[0].color[0] := 1;
-  vertices[0].color[1] := 1;
-  vertices[0].color[2] := 1;
-  vertices[0].color[3] := 1;
 end;
 
 //==============================================================================
@@ -242,6 +250,57 @@ end;
 
 
 //==============================================================================
+procedure TMainForm.Draw;
+var
+  mappedResource : D3D11_MAPPED_SUBRESOURCE;
+  pos : SIZE_T;
+  vertices : array[0..2] of TSimpleVertex;
+begin
+  m_d3dCanvas.Clear(D3DColor4f(0.0, 0.0, 0.0, 1.0));
+
+  //SetLength(vertices, 3);
+
+  vertices[0].pos[0] := 1;
+  vertices[0].pos[1] := 1;
+  vertices[0].pos[2] := 0;
+
+
+  vertices[1].pos[0] := 10;
+  vertices[1].pos[1] := 10;
+  vertices[1].pos[2] := 0;
+
+  vertices[2].pos[0] := 20;
+  vertices[2].pos[1] := 30;
+  vertices[2].pos[2] := 0;
+
+  vertices[0].color[0] := 1;
+  vertices[0].color[1] := 1;
+  vertices[0].color[2] := 1;
+  vertices[0].color[3] := 1;
+
+  vertices[1].color[0] := 1;
+  vertices[1].color[1] := 1;
+  vertices[1].color[2] := 1;
+  vertices[1].color[3] := 1;
+
+  vertices[2].color[0] := 1;
+  vertices[2].color[1] := 1;
+  vertices[2].color[2] := 1;
+  vertices[2].color[3] := 1;
+
+
+  m_d3dCanvas.DeviceContext.Map(m_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedResource);
+  CopyMemory(mappedResource.pData, @vertices[0], SizeOf(vertices));
+  m_d3dCanvas.DeviceContext.Unmap(m_pVertexBuffer, 0);
+
+  pos := 0;
+
+  m_d3dCanvas.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
+  m_d3dCanvas.DeviceContext.Draw(3, 0);
+  m_d3dCanvas.Paint;
+end;
+
+//==============================================================================
 procedure TMainForm.Render;
 begin
   m_d3dCanvas.Clear(D3DColor4f(0.0, 0.0, 0.0, 1.0));
@@ -257,8 +316,7 @@ procedure TMainForm.pnlD3dCanvasMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
   Start;
-
-  Render;
+  Draw;
 end;
 
 end.
