@@ -60,6 +60,8 @@ procedure TMainForm.FormPaint(Sender: TObject);
 begin
   m_f2dCanvas.BeginDraw;
 
+  m_f2dCanvas.Clear($FF000000);
+
   // Write 'Lines' with lines
   m_f2dCanvas.DrawLine(PointF(50, 50), PointF(50, 200), $FFFF0000, 1);
   m_f2dCanvas.DrawLine(PointF(50, 200), PointF(150, 200), $FFFF0000, 1);

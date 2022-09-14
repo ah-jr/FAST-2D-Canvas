@@ -17,8 +17,8 @@ type
   T4DSingleArray = array [0..3] of Single;
 
   TScreenVertex = record
-    pos : T4DSingleArray;
-    color: T4DSingleArray;
+    pos   : T4DSingleArray;
+    color : T4DSingleArray;
   end;
 
   PScreenVertex = ^TScreenVertex;
