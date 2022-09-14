@@ -103,8 +103,10 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="src\MainFormU.pas"/>
-        <DCCReference Include="src\D3DCanvasU.pas"/>
-        <DCCReference Include="src\FastD3DMathU.pas"/>
+        <DCCReference Include="src\F2DCanvasU.pas"/>
+        <DCCReference Include="src\F2DMathU.pas"/>
+        <DCCReference Include="src\F2DRendererU.pas"/>
+        <DCCReference Include="src\F2DTypesU.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -132,6 +134,12 @@
             </Delphi.Personality>
             <Deployment Version="3">
                 <DeployFile LocalName="bin\FastD3D11.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>FastD3D11.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win32\Debug\FastD3D11.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>FastD3D11.exe</RemoteName>
                         <Overwrite>true</Overwrite>

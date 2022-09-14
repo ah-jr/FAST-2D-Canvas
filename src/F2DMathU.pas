@@ -1,9 +1,10 @@
-unit FastD3DMathU;
+unit F2DMathU;
 
 interface
 
 uses
   Winapi.Windows,
+  Winapi.D3D11,
   Classes;
 
 type
@@ -38,6 +39,9 @@ type
     NearZ: single; FarZ: single): TXMMATRIX;
 
   function XMScalarNearEqual(S1: single; S2: single; Epsilon: single): boolean;
+
+  function D3DColor4f(a_dRed, a_dGreen, a_dBlue, a_dAlpha: Single): TFourSingleArray; inline;
+  function D3DColor4fARGB(a_ARGB: Cardinal): TFourSingleArray; inline;
 
 implementation
 
@@ -92,5 +96,23 @@ begin
     Result.m[3, 1] := -(ViewTop + ViewBottom) * ReciprocalHeight;
     Result.m[3, 2] := -fRange * NearZ;
     Result.m[3, 3] := 1.0;
+end;
+
+//==============================================================================
+function D3DColor4f(a_dRed, a_dGreen, a_dBlue, a_dAlpha: Single): TFourSingleArray;
+begin
+  Result[0] := a_dRed;
+  Result[1] := a_dGreen;
+  Result[2] := a_dBlue;
+  Result[3] := a_dAlpha;
+end;
+
+//==============================================================================
+function D3DColor4fARGB(a_ARGB: Cardinal): TFourSingleArray;
+begin
+  Result[0] := Byte(a_ARGB shr 16) / 255;
+  Result[1] := Byte(a_ARGB shr 8) / 255;
+  Result[2] := Byte(a_ARGB) / 255;
+  Result[3] := Byte(a_ARGB shr 24) / 255;
 end;
 end.

@@ -1,11 +1,11 @@
-unit D3DCanvasU;
+unit F2DRendererU;
 
 interface
 
 uses
 
   Windows,
-  Winapi.DXTypes,
+  DXTypes,
   SysUtils,
   Math,
   Direct3D,
@@ -16,30 +16,14 @@ uses
   D3D10,
   DxgiFormat,
   DxgiType,
+  F2DTypesU,
   D3DCompiler;
 
 type
-  TD3DCanvasProperties = record
-    Hwnd        : HWND;
-    Width       : Integer;
-    Height      : Integer;
-    MSAA        : Integer;
-  end;
-
-  T3DSingleArray = array [0..2] of Single;
-  T4DSingleArray = array [0..3] of Single;
-
-  TSimpleVertex = record
-    pos : T4DSingleArray;
-    color: T4DSingleArray;
-  end;
-
-  PSimpleVertex = ^TSimpleVertex;
-
-  TD3DCanvas = class
+  TF2DRenderer = class
   private
     m_cpProp : TD3DCanvasProperties;
-  
+
     m_Device: ID3D11Device;
     m_DeviceContext: ID3D11DeviceContext;
     m_CurrentFeatureLevel: TD3D_Feature_Level;
@@ -51,7 +35,7 @@ type
     m_DepthStencilState: ID3D11DepthStencilState;
     m_DepthStencilView: ID3D11DepthStencilView;
     m_RasterizerState: ID3D11RasterizerState;
-  
+
     m_bInitialized : Boolean;
 
     procedure Init;
@@ -61,7 +45,7 @@ type
     constructor Create(a_cpProp : TD3DCanvasProperties);
     destructor Destroy; override;
 
-    procedure CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; out buffer : Winapi.D3DCommon.ID3DBlob);
+    procedure CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; out buffer : ID3DBlob);
 
     procedure Clear(a_clColor: TFourSingleArray);
     procedure Paint;
@@ -71,31 +55,10 @@ type
 
   end;
 
-  function D3DColor4f(a_dRed, a_dGreen, a_dBlue, a_dAlpha: Single): TFourSingleArray; inline;
-  function D3DColor4fARGB(a_ARGB: Cardinal): TFourSingleArray; inline;
-
 implementation
 
 //==============================================================================
-function D3DColor4f(a_dRed, a_dGreen, a_dBlue, a_dAlpha: Single): TFourSingleArray;
-begin
-  Result[0] := a_dRed;
-  Result[1] := a_dGreen;
-  Result[2] := a_dBlue;
-  Result[3] := a_dAlpha;
-end;
-
-//==============================================================================
-function D3DColor4fARGB(a_ARGB: Cardinal): TFourSingleArray;
-begin
-  Result[0] := Byte(a_ARGB shr 16) / 255;
-  Result[1] := Byte(a_ARGB shr 8) / 255;
-  Result[2] := Byte(a_ARGB) / 255;
-  Result[3] := Byte(a_ARGB shr 24) / 255;
-end;
-
-//==============================================================================
-constructor TD3DCanvas.Create(a_cpProp : TD3DCanvasProperties);
+constructor TF2DRenderer.Create(a_cpProp : TD3DCanvasProperties);
 begin
   m_cpProp.Hwnd   := a_cpProp.Hwnd;
   m_cpProp.Width  := a_cpProp.Width;
@@ -108,26 +71,26 @@ begin
 end;
 
 //==============================================================================
-destructor TD3DCanvas.Destroy;
+destructor TF2DRenderer.Destroy;
 begin
   Reset;
   Inherited;
 end;
 
 //==============================================================================
-procedure TD3DCanvas.Clear(a_clColor: TFourSingleArray);
+procedure TF2DRenderer.Clear(a_clColor: TFourSingleArray);
 begin
   m_DeviceContext.ClearRenderTargetView(m_RenderTargetView, a_clColor);
 end;
 
 //==============================================================================
-procedure TD3DCanvas.Paint;
+procedure TF2DRenderer.Paint;
 begin
   m_Swapchain.Present(0, 0);
 end;
 
 //==============================================================================
-procedure TD3DCanvas.Reset;
+procedure TF2DRenderer.Reset;
 begin
   if not m_bInitialized then
     Exit;
@@ -136,12 +99,12 @@ begin
   m_Device           := nil;
   m_RenderTargetView := nil;
   m_Swapchain        := nil;
-  
+
   m_bInitialized     := False;
 end;
 
 //==============================================================================
-procedure TD3DCanvas.Init;
+procedure TF2DRenderer.Init;
 var
   arrFeatureLevel : Array[0..2] of TD3D_Feature_Level;
   Backbuffer      : ID3D11Texture2D;
@@ -293,7 +256,7 @@ begin
     {$HINTS off}
     FillChar(m_Viewport, SizeOf(m_Viewport), 0);
     {$HINTS on}
-    with m_Viewport do 
+    with m_Viewport do
     begin
       Width := m_cpProp.Width;
       Height := m_cpProp.Height;
@@ -311,10 +274,10 @@ begin
 end;
 
 //==============================================================================
-procedure TD3DCanvas.CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; out buffer : Winapi.D3DCommon.ID3DBlob);
+procedure TF2DRenderer.CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; out buffer : ID3DBlob);
 var
   flags : DWORD;
-  errBuffer : Winapi.D3DCommon.ID3DBlob;
+  errBuffer : ID3DBlob;
 begin
   flags := D3DCOMPILE_ENABLE_STRICTNESS or D3DCOMPILE_DEBUG;
 
