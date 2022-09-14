@@ -16,10 +16,12 @@ uses
   D3DCanvasU,
   Vcl.ExtCtrls,
   D3DX11_JSB,
+  D3D11,
   D3D11_JSB,
   DXTypes_JSB,
   DXGI_JSB,
-  D3DCommon_JSB;
+  D3DCommon_JSB,
+  D3DCommon;
 
 type
   TMainForm = class(TForm)
@@ -86,14 +88,20 @@ end;
 //==============================================================================
 procedure TMainForm.LoadContent;
 var
-  pVSBuffer : ID3DBlob;
+  pVSBuffer : Winapi.D3DCommon.ID3DBlob;
+  pPSBuffer : Winapi.D3DCommon.ID3DBlob;
   d3dLinkage : ID3D11ClassLinkage;
   shaderInputLayout : array of D3D11_INPUT_ELEMENT_DESC;
+
+  vertices : array of TSimpleVertex;
+
+  vertexDesc : D3D11_BUFFER_DESC;
+
+  resourceData : D3D11_SUBRESOURCE_DATA;
 const
   c_numLayoutElements = 1;
 begin
   m_d3dCanvas.CompileShader('ShaderGreenColor.fx', 'VS_Main', 'vs_4_0', pVSBuffer);
-
   m_d3dCanvas.Device.CreateVertexShader(pVSBuffer.GetBufferPointer, pVSBuffer.GetBufferSize, d3dLinkage, m_pVertexShader);
 
   SetLength(shaderInputLayout, c_numLayoutElements);
@@ -108,23 +116,61 @@ begin
 
   m_d3dCanvas.Device.CreateInputLayout(@shaderInputLayout, c_numLayoutElements, pVSBuffer.GetBufferPointer, pVSBuffer.GetBufferSize, m_pInputLayout);
 
-  pVSBuffer._Release;
+  pVSBuffer := nil;
 
+  m_d3dCanvas.CompileShader('ShaderGreenColor.fx', 'PS_Main', 'ps_4_0', pPSBuffer);
+  m_d3dCanvas.Device.CreatePixelShader(pPSBuffer.GetBufferPointer, pPSBuffer.GetBufferSize, d3dLinkage, m_pPixelShader);
 
+  pPSBuffer := nil;
 
+  SetLength(vertices, 3);
+
+  vertices[0].pos[0] := 0;
+  vertices[0].pos[1] := 0.5;
+  vertices[0].pos[2] := 0.5;
+
+  vertices[1].pos[0] := 0.5;
+  vertices[1].pos[1] := -0.5;
+  vertices[1].pos[2] := 0.5;
+
+  vertices[2].pos[0] := -0.5;
+  vertices[2].pos[1] := -0.5;
+  vertices[2].pos[2] := 0.5;
+
+  vertexDesc.Usage := D3D11_USAGE_DEFAULT;
+  vertexDesc.BindFlags := Cardinal(D3D11_BIND_VERTEX_BUFFER);
+  vertexDesc.ByteWidth := sizeof(TSimpleVertex) * 3 ;
+
+  resourceData.pSysMem := vertices;
+
+  m_d3dCanvas.Device.CreateBuffer(vertexDesc, @resourceData, m_pVertexBuffer);
 end;
 
 //==============================================================================
 procedure TMainForm.Render;
 var
-  BLEND_DESC: D3D11_BLEND_DESC;
+  BLEND_DESC: D3D11.D3D11_BLEND_DESC;
   ppBlendState: ID3D11BlendState;
+  stride, offset : UINT;
 begin
-  //BLEND_DESC := D3D11_BLEND_DESC.Create(True);
+  BLEND_DESC := D3D11.D3D11_BLEND_DESC.Create(True);
 
   m_d3dCanvas.Clear(D3DColor4f(0.0, 1.0, 0.0, 1.0));
-  m_d3dCanvas.Device.CreateBlendState(BLEND_DESC, ppBlendState);
+  m_d3dCanvas.Device.CreateBlendState(TD3D11_BlendDesc(BLEND_DESC), ppBlendState);
   m_d3dCanvas.DeviceContext.OMSetBlendState(ppBlendState, D3DColor4f(1.0, 1.0, 1.0, 1.0), $ffffffff);
+
+  stride := sizeof(TSimpleVertex);
+  offset := 0;
+
+  m_d3dCanvas.DeviceContext.IASetInputLayout(m_pInputLayout);
+  m_d3dCanvas.DeviceContext.IASetVertexBuffers(0, 1, @m_pVertexBuffer, @stride, @offset);
+  m_d3dCanvas.DeviceContext.IASetPrimitiveTopology(TD3D11_PrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP));
+
+  m_d3dCanvas.DeviceContext.VSSetShader(m_pVertexShader, 0, 0);
+  m_d3dCanvas.DeviceContext.PSSetShader(m_pPixelShader, 0, 0);
+
+  m_d3dCanvas.DeviceContext.Draw(3, 0);
+
 
   m_d3dCanvas.Paint;
 end;

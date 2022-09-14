@@ -17,6 +17,7 @@ uses
 //  DxgiFormat,
 //  DxgiType,
   D3DCompiler,
+  D3DCommon,
   D3DX11_JSB,
   D3D11_JSB,
   DXTypes_JSB,
@@ -66,7 +67,7 @@ type
     constructor Create(a_cpProp : TD3DCanvasProperties);
     destructor Destroy; override;
 
-    function CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; buffer : ID3DBlob) : Boolean;
+    function CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; out buffer : Winapi.D3DCommon.ID3DBlob) : Boolean;
 
     procedure Clear(a_clColor: TColorArray);
     procedure Paint;
@@ -316,20 +317,20 @@ begin
 end;
 
 //==============================================================================
-function TD3DCanvas.CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; buffer : ID3DBlob) : Boolean;
+function TD3DCanvas.CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; out buffer : Winapi.D3DCommon.ID3DBlob) : Boolean;
 var
   flags : DWORD;
-  errBuffer : ID3DBlob;
+  errBuffer : Winapi.D3DCommon.ID3DBlob;
 
-  d3dMacro : TD3D_ShaderMacro;
-  d3dInclude : ID3DInclude;
+  d3dMacro : LPD3D_SHADER_MACRO;
+  d3dInclude : Winapi.D3DCommon.ID3DInclude;
   d3dThreadPump : ID3DX11ThreadPump;
 
   hr : HRESULT;
 begin
   flags := D3DCOMPILE_ENABLE_STRICTNESS or D3DCOMPILE_DEBUG;
 
-  hr := D3DX11CompileFromFile(szFilePath, d3dMacro, d3dInclude, szFunc, szShaderModel, flags, 0, d3dThreadPump, buffer, errBuffer, 0);
+  hr := D3DCompileFromFile(szFilePath, nil, nil, szFunc, szShaderModel, flags, 0, buffer, Pointer(errBuffer));
 
   if errBuffer <> nil then
     errBuffer._Release;
