@@ -27,11 +27,11 @@ type
   end;
 
   T3DSingleArray = array [0..2] of Single;
-  TFourSingleArray = array[0..3] of Single;
+  T4DSingleArray = array [0..3] of Single;
 
   TSimpleVertex = record
-    pos : T3DSingleArray;
-    //color: XMFLOAT3;
+    pos : T4DSingleArray;
+    color: T4DSingleArray;
   end;
 
   PSimpleVertex = ^TSimpleVertex;
@@ -61,7 +61,7 @@ type
     constructor Create(a_cpProp : TD3DCanvasProperties);
     destructor Destroy; override;
 
-    function CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; out buffer : Winapi.D3DCommon.ID3DBlob) : Boolean;
+    procedure CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; out buffer : Winapi.D3DCommon.ID3DBlob);
 
     procedure Clear(a_clColor: TFourSingleArray);
     procedure Paint;
@@ -117,7 +117,7 @@ end;
 //==============================================================================
 procedure TD3DCanvas.Clear(a_clColor: TFourSingleArray);
 begin
-  m_DeviceContext.ClearRenderTargetView(m_RenderTargetView, D3D11.TFourSingleArray(a_clColor));
+  m_DeviceContext.ClearRenderTargetView(m_RenderTargetView, a_clColor);
 end;
 
 //==============================================================================
@@ -311,15 +311,14 @@ begin
 end;
 
 //==============================================================================
-function TD3DCanvas.CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; out buffer : Winapi.D3DCommon.ID3DBlob) : Boolean;
+procedure TD3DCanvas.CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; out buffer : Winapi.D3DCommon.ID3DBlob);
 var
   flags : DWORD;
   errBuffer : Winapi.D3DCommon.ID3DBlob;
-  hr : HRESULT;
 begin
   flags := D3DCOMPILE_ENABLE_STRICTNESS or D3DCOMPILE_DEBUG;
 
-  hr := D3DCompileFromFile(szFilePath, nil, nil, szFunc, szShaderModel, flags, 0, buffer, Pointer(errBuffer));
+  D3DCompileFromFile(szFilePath, nil, nil, szFunc, szShaderModel, flags, 0, buffer, Pointer(errBuffer));
 
   if errBuffer <> nil then
     errBuffer._Release;
