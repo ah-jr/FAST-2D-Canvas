@@ -8,17 +8,13 @@ uses
   System.SysUtils,
   System.Variants,
   System.Classes,
+  System.Types,
+  System.UITypes,
   Vcl.Graphics,
   Vcl.ExtCtrls,
   Vcl.Controls,
   Vcl.Forms,
   Vcl.Dialogs,
-  D3D11,
-  DXGI,
-  DxgiType,
-  DxgiFormat,
-  DXTypes,
-  D3DCommon,
   F2DTypesU,
   F2DCanvasU;
 
@@ -28,12 +24,9 @@ type
 
     procedure FormCreate(Sender: TObject);
     procedure FormPaint(Sender: TObject);
-    procedure pnlD3dCanvasMouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer);
 
   private
     m_f2dCanvas : TF2DCanvas;
-
 
   end;
 
@@ -43,14 +36,13 @@ var
 implementation
 
 {$R *.dfm}
+
 //==============================================================================
 procedure TMainForm.FormCreate(Sender: TObject);
 var
-  d3dProp : TD3DCanvasProperties;
-  RASTERIZER_DESC: TD3D11_Rasterizer_Desc;
-  ppRasterizerState: ID3D11RasterizerState;
+  f2dProp : TF2DCanvasProperties;
 begin
-  with d3dProp do
+  with f2dProp do
   begin
     Hwnd   := pnlD3dCanvas.Handle;
     Width  := pnlD3dCanvas.Width;
@@ -58,21 +50,39 @@ begin
     MSAA   := 4;
   end;
 
-  m_f2dCanvas := TF2DCanvas.Create(d3dProp);
+  //////////////////////////////////////////////////////////////////////////////
+  ///  Create canvas
+  m_f2dCanvas := TF2DCanvas.Create(f2dProp);
 end;
 
 //==============================================================================
 procedure TMainForm.FormPaint(Sender: TObject);
 begin
-  //
+  m_f2dCanvas.BeginDraw;
+
+  // Write 'Lines' with lines
+  m_f2dCanvas.DrawLine(PointF(50, 50), PointF(50, 200), $FFFF0000, 1);
+  m_f2dCanvas.DrawLine(PointF(50, 200), PointF(150, 200), $FFFF0000, 1);
+
+  m_f2dCanvas.DrawLine(PointF(200, 80), PointF(200, 200), $FF00FF00, 1);
+
+  m_f2dCanvas.DrawLine(PointF(250, 80), PointF(250, 200), $FF0000FF, 1);
+  m_f2dCanvas.DrawLine(PointF(250, 80), PointF(350, 200), $FF0000FF, 1);
+  m_f2dCanvas.DrawLine(PointF(350, 80), PointF(350, 200), $FF0000FF, 1);
+
+  m_f2dCanvas.DrawLine(PointF(400, 80), PointF(400, 200), $FFFFFF00, 1);
+  m_f2dCanvas.DrawLine(PointF(400, 80), PointF(500, 80), $FFFFFF00, 1);
+  m_f2dCanvas.DrawLine(PointF(400, 140), PointF(500, 140), $FFFFFF00, 1);
+  m_f2dCanvas.DrawLine(PointF(400, 200), PointF(500, 200), $FFFFFF00, 1);
+
+  m_f2dCanvas.DrawLine(PointF(550, 80), PointF(650, 80), $FF00FFFF, 1);
+  m_f2dCanvas.DrawLine(PointF(550, 140), PointF(650, 140), $FF00FFFF, 1);
+  m_f2dCanvas.DrawLine(PointF(550, 200), PointF(650, 200), $FF00FFFF, 1);
+  m_f2dCanvas.DrawLine(PointF(550, 80), PointF(550, 140), $FF00FFFF, 1);
+  m_f2dCanvas.DrawLine(PointF(650, 140), PointF(650, 200), $FF00FFFF, 1);
+
+  m_f2dCanvas.EndDraw;
 end;
 
 //==============================================================================
-procedure TMainForm.pnlD3dCanvasMouseMove(Sender: TObject; Shift: TShiftState;
-  X, Y: Integer);
-begin
-  m_f2dCanvas.Start;
-  m_f2dCanvas.Draw;
-end;
-
 end.

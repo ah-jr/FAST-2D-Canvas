@@ -22,7 +22,7 @@ uses
 type
   TF2DRenderer = class
   private
-    m_cpProp : TD3DCanvasProperties;
+    m_cpProp : TF2DCanvasProperties;
 
     m_Device: ID3D11Device;
     m_DeviceContext: ID3D11DeviceContext;
@@ -42,7 +42,7 @@ type
     procedure Reset;
 
   public
-    constructor Create(a_cpProp : TD3DCanvasProperties);
+    constructor Create(a_cpProp : TF2DCanvasProperties);
     destructor Destroy; override;
 
     procedure CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; out buffer : ID3DBlob);
@@ -58,7 +58,7 @@ type
 implementation
 
 //==============================================================================
-constructor TF2DRenderer.Create(a_cpProp : TD3DCanvasProperties);
+constructor TF2DRenderer.Create(a_cpProp : TF2DCanvasProperties);
 begin
   m_cpProp.Hwnd   := a_cpProp.Hwnd;
   m_cpProp.Width  := a_cpProp.Width;

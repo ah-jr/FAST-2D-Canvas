@@ -6,7 +6,7 @@ uses
   Winapi.Windows;
 
 type
-  TD3DCanvasProperties = record
+  TF2DCanvasProperties = record
     Hwnd        : HWND;
     Width       : Integer;
     Height      : Integer;
@@ -16,12 +16,12 @@ type
   T3DSingleArray = array [0..2] of Single;
   T4DSingleArray = array [0..3] of Single;
 
-  TSimpleVertex = record
+  TScreenVertex = record
     pos : T4DSingleArray;
     color: T4DSingleArray;
   end;
 
-  PSimpleVertex = ^TSimpleVertex;
+  PScreenVertex = ^TScreenVertex;
 
 implementation
 

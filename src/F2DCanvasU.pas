@@ -5,8 +5,10 @@ interface
 uses
 
   Windows,
-  Winapi.DXTypes,
+  DXTypes,
   SysUtils,
+  UITypes,
+  Types,
   Math,
   Direct3D,
   D3D11,
@@ -37,36 +39,28 @@ type
     m_matProj : TXMMATRIX;
 
   public
-    constructor Create(a_cpProp : TD3DCanvasProperties); reintroduce;
+    constructor Create(a_cpProp : TF2DCanvasProperties); reintroduce;
     destructor Destroy; Override;
 
 
-    procedure LoadContent;
+    procedure InitRenderer;
 
-    procedure Start;
-    //procedure DrawLine;
-    procedure Draw;
+    procedure BeginDraw;
+    procedure EndDraw;
 
-    procedure Render;
+    ////////////////////////////////////////////////////////////////////////////
+    ///  Drawing functions:
+    procedure DrawLine(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
 
   end;
 
 implementation
 //==============================================================================
-constructor TF2DCanvas.Create(a_cpProp : TD3DCanvasProperties);
-var
-  d3dProp : TD3DCanvasProperties;
-  RASTERIZER_DESC: TD3D11_Rasterizer_Desc;
-  ppRasterizerState: ID3D11RasterizerState;
+constructor TF2DCanvas.Create(a_cpProp : TF2DCanvasProperties);
 begin
   m_f2dRenderer := TF2DRenderer.Create(a_cpProp);
 
-  RASTERIZER_DESC := TD3D11_Rasterizer_Desc.Create(True);
-  RASTERIZER_DESC.CullMode := D3D11_CULL_NONE;
-  m_f2dRenderer.Device.CreateRasterizerState(D3D11_RASTERIZER_DESC(RASTERIZER_DESC), ppRasterizerState);
-  m_f2dRenderer.DeviceContext.RSSetState(ppRasterizerState);
-
-  LoadContent;
+  InitRenderer;
 end;
 
 //==============================================================================
@@ -80,8 +74,11 @@ begin
 end;
 
 //==============================================================================
-procedure TF2DCanvas.LoadContent;
+procedure TF2DCanvas.InitRenderer;
 var
+  RASTERIZER_DESC: TD3D11_Rasterizer_Desc;
+  ppRasterizerState: ID3D11RasterizerState;
+
   pVSBuffer : ID3DBlob;
   pPSBuffer : ID3DBlob;
   d3dLinkage : ID3D11ClassLinkage;
@@ -98,6 +95,12 @@ var
 const
   c_numLayoutElements = 2;
 begin
+  RASTERIZER_DESC := TD3D11_Rasterizer_Desc.Create(True);
+  RASTERIZER_DESC.CullMode := D3D11_CULL_NONE;
+  m_f2dRenderer.Device.CreateRasterizerState(D3D11_RASTERIZER_DESC(RASTERIZER_DESC), ppRasterizerState);
+  m_f2dRenderer.DeviceContext.RSSetState(ppRasterizerState);
+
+
   m_f2dRenderer.CompileShader('ScreenCoordinates.fx', 'VS_Main', 'vs_4_0', pVSBuffer);
   m_f2dRenderer.CompileShader('ScreenCoordinates.fx', 'PS_Main', 'ps_4_0', pPSBuffer);
 
@@ -145,7 +148,7 @@ begin
   ZeroMemory(@bufferDesc, Sizeof(bufferDesc));
 
 	bufferDesc.Usage := D3D11_USAGE_DYNAMIC;
-	bufferDesc.ByteWidth := Sizeof(TSimpleVertex) * 3;
+	bufferDesc.ByteWidth := Sizeof(TScreenVertex) * 3;
 	bufferDesc.BindFlags := D3D11_BIND_VERTEX_BUFFER;
 	bufferDesc.CPUAccessFlags := D3D11_CPU_ACCESS_WRITE;
 	bufferDesc.MiscFlags := 0;
@@ -179,7 +182,7 @@ begin
 end;
 
 //==============================================================================
-procedure TF2DCanvas.Start;
+procedure TF2DCanvas.BeginDraw;
 var
   stride, offset : UINT;
 begin
@@ -192,72 +195,50 @@ begin
 
 	m_f2dRenderer.DeviceContext.IASetInputLayout(m_pInputLayout);
 
-	stride := SizeOf(TSimpleVertex);
+	stride := SizeOf(TScreenVertex);
 	offset := 0;
 	m_f2dRenderer.DeviceContext.IASetVertexBuffers(0, 1, &m_pVertexBuffer, @stride, @offset);
+
+  m_f2dRenderer.Clear(D3DColor4f(0.0, 0.0, 0.0, 1.0));
 
 	//fontWrapper->DrawString(m_f2dRenderer.DeviceContext, L"", 0.0f, 0.0f, 0.0f, 0xff000000, FW1_RESTORESTATE | FW1_NOFLUSH);
 end;
 
-
 //==============================================================================
-procedure TF2DCanvas.Draw;
-var
-  mappedResource : D3D11_MAPPED_SUBRESOURCE;
-  pos : SIZE_T;
-  vertices : array[0..2] of TSimpleVertex;
+procedure TF2DCanvas.EndDraw;
 begin
-  m_f2dRenderer.Clear(D3DColor4f(0.0, 0.0, 0.0, 1.0));
-
-  //SetLength(vertices, 3);
-
-  vertices[0].pos[0] := 1;
-  vertices[0].pos[1] := 1;
-  vertices[0].pos[2] := 0;
-
-
-  vertices[1].pos[0] := 10;
-  vertices[1].pos[1] := 10;
-  vertices[1].pos[2] := 0;
-
-  vertices[2].pos[0] := 20;
-  vertices[2].pos[1] := 30;
-  vertices[2].pos[2] := 0;
-
-  vertices[0].color[0] := 1;
-  vertices[0].color[1] := 1;
-  vertices[0].color[2] := 1;
-  vertices[0].color[3] := 1;
-
-  vertices[1].color[0] := 1;
-  vertices[1].color[1] := 1;
-  vertices[1].color[2] := 1;
-  vertices[1].color[3] := 1;
-
-  vertices[2].color[0] := 1;
-  vertices[2].color[1] := 1;
-  vertices[2].color[2] := 1;
-  vertices[2].color[3] := 1;
-
-
-  m_f2dRenderer.DeviceContext.Map(m_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedResource);
-  CopyMemory(mappedResource.pData, @vertices[0], SizeOf(vertices));
-  m_f2dRenderer.DeviceContext.Unmap(m_pVertexBuffer, 0);
-
-  pos := 0;
-
-  m_f2dRenderer.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
-  m_f2dRenderer.DeviceContext.Draw(3, 0);
-  m_f2dRenderer.Paint;
+  //
 end;
 
 //==============================================================================
-procedure TF2DCanvas.Render;
+procedure TF2DCanvas.DrawLine(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
+var
+  mappedResource : D3D11_MAPPED_SUBRESOURCE;
+  arrVertices : array[0..1] of TScreenVertex;
 begin
-  m_f2dRenderer.Clear(D3DColor4f(0.0, 0.0, 0.0, 1.0));
-  m_f2dRenderer.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+  arrVertices[0].pos[0] := a_pntA.X;
+  arrVertices[0].pos[1] := a_pntA.Y;
+  arrVertices[0].pos[2] := 0;
 
+  arrVertices[1].pos[0] := a_pntB.X;
+  arrVertices[1].pos[1] := a_pntB.Y;
+  arrVertices[1].pos[2] := 0;
 
+  arrVertices[0].color[0] := a_clColor and $00FF0000;
+  arrVertices[0].color[1] := a_clColor and $0000FF00;
+  arrVertices[0].color[2] := a_clColor and $000000FF;
+  arrVertices[0].color[3] := a_clColor and $FF000000;
+
+  arrVertices[1].color[0] := a_clColor and $00FF0000;
+  arrVertices[1].color[1] := a_clColor and $0000FF00;
+  arrVertices[1].color[2] := a_clColor and $000000FF;
+  arrVertices[1].color[3] := a_clColor and $FF000000;
+
+  m_f2dRenderer.DeviceContext.Map(m_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedResource);
+  CopyMemory(mappedResource.pData, @arrVertices[0], SizeOf(arrVertices));
+  m_f2dRenderer.DeviceContext.Unmap(m_pVertexBuffer, 0);
+
+  m_f2dRenderer.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
   m_f2dRenderer.DeviceContext.Draw(3, 0);
   m_f2dRenderer.Paint;
 end;

@@ -23,6 +23,5 @@ object MainForm: TMainForm
     Align = alClient
     Caption = 'pnlD3dCanvas'
     TabOrder = 0
-    OnMouseMove = pnlD3dCanvasMouseMove
   end
 end
