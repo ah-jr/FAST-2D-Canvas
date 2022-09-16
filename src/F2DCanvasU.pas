@@ -4,6 +4,7 @@ interface
 
 uses
   Windows,
+  Generics.Collections,
   DXTypes,
   SysUtils,
   UITypes,
@@ -28,6 +29,9 @@ type
 
     m_pBlendDesc    : ID3D11BlendState;
     m_matProj       : TXMMATRIX;
+
+    m_arrVertices   : array of TScreenVertex;
+    m_lstRender     : TList<TRenderQueueItem>;
 
   public
     constructor Create(a_cpProp : TF2DCanvasProperties); reintroduce;
@@ -56,6 +60,8 @@ constructor TF2DCanvas.Create(a_cpProp : TF2DCanvasProperties);
 begin
   m_f2dRenderer := TF2DRenderer.Create(a_cpProp);
 
+  m_lstRender := TList<TRenderQueueItem>.Create;
+
   InitRenderer;
 end;
 
@@ -67,6 +73,8 @@ begin
   m_pInputLayout  := nil;
   m_pVertexBuffer := nil;
   m_pScreenBuffer := nil;
+
+  FreeAndNil(m_lstRender);
 end;
 
 //==============================================================================
@@ -211,8 +219,27 @@ end;
 
 //==============================================================================
 procedure TF2DCanvas.EndDraw;
+var
+  d3dMappedRes : TD3D11_Mapped_Subresource;
+  nIndex       : Integer;
+  nPos         : Integer;
 begin
-  //
+  m_f2dRenderer.DeviceContext.Map(m_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, d3dMappedRes);
+  CopyMemory(d3dMappedRes.pData, @m_arrVertices[0], SizeOf(TScreenVertex) * Length(m_arrVertices));
+  m_f2dRenderer.DeviceContext.Unmap(m_pVertexBuffer, 0);
+
+  nPos := 0;
+
+  for nIndex := 0 to m_lstRender.Count - 1 do
+  begin
+    m_f2dRenderer.DeviceContext.IASetPrimitiveTopology(m_lstRender.Items[nIndex].Topology);
+    m_f2dRenderer.DeviceContext.Draw(m_lstRender.Items[nIndex].Count, nPos);
+    nPos := nPos + m_lstRender.Items[nIndex].Count;
+  end;
+
+  m_f2dRenderer.Paint;
+  SetLength(m_arrVertices, 0);
+  m_lstRender.Clear;
 end;
 
 //==============================================================================
@@ -224,86 +251,82 @@ end;
 //==============================================================================
 procedure TF2DCanvas.DrawLine(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
 var
-  d3dMappedRes : TD3D11_Mapped_Subresource;
-  arrVertices  : array of TScreenVertex;
   nIndex       : Integer;
   dAngleSin    : Double;
   dAngleCos    : Double;
   dLength      : Double;
+  nVertexCount : Integer;
+  RenderItem   : TRenderQueueItem;
 const
   c_nVerticesNum = 4;
 begin
-  SetLength(arrVertices, c_nVerticesNum);
+  nVertexCount := Length(m_arrVertices);
+  SetLength(m_arrVertices, nVertexCount + c_nVerticesNum);
 
   dLength := Sqrt(Power(a_pntB.Y - a_pntA.Y, 2) + Power(a_pntB.X - a_pntA.X, 2));
   dAngleSin := (a_pntB.Y - a_pntA.Y)/dLength;
   dAngleCos := (a_pntB.X - a_pntA.X)/dLength;
 
-  arrVertices[0].pos[0] := a_pntA.X + 0.5 + (a_nWidth / 2) * dAngleSin;
-  arrVertices[0].pos[1] := a_pntA.Y + 0.5 - (a_nWidth / 2) * dAngleCos;
-  arrVertices[0].pos[2] := 0;
+  m_arrVertices[nVertexCount + 0].pos[0] := a_pntA.X + 0.5 + (a_nWidth / 2) * dAngleSin;
+  m_arrVertices[nVertexCount + 0].pos[1] := a_pntA.Y + 0.5 - (a_nWidth / 2) * dAngleCos;
+  m_arrVertices[nVertexCount + 0].pos[2] := 0;
 
-  arrVertices[1].pos[0] := a_pntB.X + 0.5 + (a_nWidth / 2) * dAngleSin;
-  arrVertices[1].pos[1] := a_pntB.Y + 0.5 - (a_nWidth / 2) * dAngleCos;
-  arrVertices[1].pos[2] := 0;
+  m_arrVertices[nVertexCount + 1].pos[0] := a_pntB.X + 0.5 + (a_nWidth / 2) * dAngleSin;
+  m_arrVertices[nVertexCount + 1].pos[1] := a_pntB.Y + 0.5 - (a_nWidth / 2) * dAngleCos;
+  m_arrVertices[nVertexCount + 1].pos[2] := 0;
 
-  arrVertices[2].pos[0] := a_pntA.X + 0.5 - (a_nWidth / 2) * dAngleSin;
-  arrVertices[2].pos[1] := a_pntA.Y + 0.5 + (a_nWidth / 2) * dAngleCos;
-  arrVertices[2].pos[2] := 0;
+  m_arrVertices[nVertexCount + 2].pos[0] := a_pntA.X + 0.5 - (a_nWidth / 2) * dAngleSin;
+  m_arrVertices[nVertexCount + 2].pos[1] := a_pntA.Y + 0.5 + (a_nWidth / 2) * dAngleCos;
+  m_arrVertices[nVertexCount + 2].pos[2] := 0;
 
-  arrVertices[3].pos[0] := a_pntB.X + 0.5 - (a_nWidth / 2) * dAngleSin;
-  arrVertices[3].pos[1] := a_pntB.Y + 0.5 + (a_nWidth / 2) * dAngleCos;
-  arrVertices[3].pos[2] := 0;
+  m_arrVertices[nVertexCount + 3].pos[0] := a_pntB.X + 0.5 - (a_nWidth / 2) * dAngleSin;
+  m_arrVertices[nVertexCount + 3].pos[1] := a_pntB.Y + 0.5 + (a_nWidth / 2) * dAngleCos;
+  m_arrVertices[nVertexCount + 3].pos[2] := 0;
 
   for nIndex := 0 to c_nVerticesNum - 1 do
-    arrVertices[nIndex].AssignColor(a_clColor);
+    m_arrVertices[nVertexCount + nIndex].AssignColor(a_clColor);
 
-  m_f2dRenderer.DeviceContext.Map(m_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, d3dMappedRes);
-  CopyMemory(d3dMappedRes.pData, @arrVertices[0], SizeOf(TScreenVertex) * Length(arrVertices));
-  m_f2dRenderer.DeviceContext.Unmap(m_pVertexBuffer, 0);
+  RenderItem.Count    := c_nVerticesNum;
+  RenderItem.Topology := D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
 
-  m_f2dRenderer.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-  m_f2dRenderer.DeviceContext.Draw(c_nVerticesNum, 0);
-  m_f2dRenderer.Paint;
+  m_lstRender.Add(RenderItem);
 end;
 
 //==============================================================================
 procedure TF2DCanvas.DrawRect(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
 var
-  d3dMappedRes : TD3D11_Mapped_Subresource;
-  arrVertices  : array of TScreenVertex;
   nIndex       : Integer;
+  nVertexCount : Integer;
+  RenderItem   : TRenderQueueItem;
 const
   c_nVerticesNum = 4;
 begin
-  SetLength(arrVertices, c_nVerticesNum);
+  nVertexCount := Length(m_arrVertices);
+  SetLength(m_arrVertices, nVertexCount + c_nVerticesNum);
 
-  arrVertices[0].pos[0] := a_pntB.X;
-  arrVertices[0].pos[1] := a_pntA.Y;
-  arrVertices[0].pos[2] := 0;
+  m_arrVertices[nVertexCount + 0].pos[0] := a_pntB.X;
+  m_arrVertices[nVertexCount + 0].pos[1] := a_pntA.Y;
+  m_arrVertices[nVertexCount + 0].pos[2] := 0;
 
-  arrVertices[1].pos[0] := a_pntB.X;
-  arrVertices[1].pos[1] := a_pntB.Y;
-  arrVertices[1].pos[2] := 0;
+  m_arrVertices[nVertexCount + 1].pos[0] := a_pntB.X;
+  m_arrVertices[nVertexCount + 1].pos[1] := a_pntB.Y;
+  m_arrVertices[nVertexCount + 1].pos[2] := 0;
 
-  arrVertices[2].pos[0] := a_pntA.X;
-  arrVertices[2].pos[1] := a_pntA.Y;
-  arrVertices[2].pos[2] := 0;
+  m_arrVertices[nVertexCount + 2].pos[0] := a_pntA.X;
+  m_arrVertices[nVertexCount + 2].pos[1] := a_pntA.Y;
+  m_arrVertices[nVertexCount + 2].pos[2] := 0;
 
-  arrVertices[3].pos[0] := a_pntA.X;
-  arrVertices[3].pos[1] := a_pntB.Y;
-  arrVertices[3].pos[2] := 0;
+  m_arrVertices[nVertexCount + 3].pos[0] := a_pntA.X;
+  m_arrVertices[nVertexCount + 3].pos[1] := a_pntB.Y;
+  m_arrVertices[nVertexCount + 3].pos[2] := 0;
 
   for nIndex := 0 to c_nVerticesNum - 1 do
-    arrVertices[nIndex].AssignColor(a_clColor);
+    m_arrVertices[nVertexCount + nIndex].AssignColor(a_clColor);
 
-  m_f2dRenderer.DeviceContext.Map(m_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, d3dMappedRes);
-  CopyMemory(d3dMappedRes.pData, @arrVertices[0], SizeOf(TScreenVertex) * Length(arrVertices));
-  m_f2dRenderer.DeviceContext.Unmap(m_pVertexBuffer, 0);
+  RenderItem.Count    := c_nVerticesNum;
+  RenderItem.Topology := D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
 
-  m_f2dRenderer.DeviceContext.IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-  m_f2dRenderer.DeviceContext.Draw(c_nVerticesNum, 0);
-  m_f2dRenderer.Paint;
+  m_lstRender.Add(RenderItem);
 end;
 
 //==============================================================================

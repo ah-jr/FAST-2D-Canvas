@@ -114,7 +114,7 @@ begin
       BufferDesc.Width                   := m_cpProp.Width;
       BufferDesc.Height                  := m_cpProp.Height;
       BufferDesc.Format                  := DXGI_FORMAT_R8G8B8A8_UNORM;
-      BufferDesc.RefreshRate.Numerator   := 60;
+      BufferDesc.RefreshRate.Numerator   := 0;
       BufferDesc.RefreshRate.Denominator := 1;
       BufferDesc.ScanlineOrdering        := DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
       BufferDesc.Scaling                 := DXGI_MODE_SCALING_STRETCHED;

@@ -65,7 +65,7 @@ begin
   ///  Set up render Timer
   m_tmrRender := TTImer.Create(Self);
   m_tmrRender.OnTimer  := RenderScreen;
-  m_tmrRender.Interval := 20;
+  m_tmrRender.Interval := 10;
   m_tmrRender.Enabled  := True;
 
   //////////////////////////////////////////////////////////////////////////////
@@ -86,7 +86,7 @@ var
   pntRotate : TPointF;
 const
   c_nRotatorLength = 100;
-  c_nRotatePeriod  = 20;
+  c_nRotatePeriod  = 50;
 begin
   m_f2dCanvas.BeginDraw;
 

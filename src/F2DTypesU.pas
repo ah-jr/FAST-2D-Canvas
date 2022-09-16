@@ -4,7 +4,8 @@ interface
 
 uses
   Winapi.Windows,
-  System.UITypes;
+  System.UITypes,
+  D3D11;
 
 type
   TF2DCanvasProperties = record
@@ -22,11 +23,15 @@ type
     color : T4DSingleArray;
     procedure AssignColor(a_clColor : TAlphaColor);
   end;
-
   PScreenVertex = ^TScreenVertex;
 
+  TRenderQueueItem = record
+    Count : Integer;
+    Topology : D3D11_PRIMITIVE_TOPOLOGY;
+  end;
+
 const
-  c_nMaxVertices = 1024;
+  c_nMaxVertices = 1000000;
 
 implementation
 
