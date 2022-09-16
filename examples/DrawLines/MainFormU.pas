@@ -117,11 +117,15 @@ begin
   m_f2dCanvas.DrawRect(PointF(50, 450), PointF(100, 500), $AFFF2050, 1);
   m_f2dCanvas.DrawRect(PointF(80, 480), PointF(130, 530), $8F50FF50, 1);
 
+  // Draw Arcs:
+  m_f2dCanvas.DrawArc(PointF(400, 400), c_nRotatorLength, $FF103F4F, 0, 0.75);
+  m_f2dCanvas.DrawArc(PointF(400, 400), c_nRotatorLength, $FF205F2F, 0.75, 0.25);
+
   // Draw Rotating Line:
   pntRotate.X := 400 + c_nRotatorLength * Sin(-2 * Pi * (m_nAngleDif/c_nRotatePeriod));
   pntRotate.Y := 400 + c_nRotatorLength * Cos(-2 * Pi * (m_nAngleDif/c_nRotatePeriod));
 
-  m_f2dCanvas.DrawLine(PointF(400, 400), pntRotate, $FFFFFFFF, 3);
+  m_f2dCanvas.DrawLine(PointF(400, 400), pntRotate, $FFFFFFFF, 6);
 
   Inc(m_nAngleDif);
   if m_nAngleDif >= c_nRotatePeriod then

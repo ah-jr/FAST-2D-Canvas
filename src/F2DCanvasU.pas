@@ -47,6 +47,7 @@ type
     procedure Clear(a_clColor : TAlphaColor);
     procedure DrawLine(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
     procedure DrawRect(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
+    procedure DrawArc(a_pntCenter : TPointF; a_nRadius : Double; a_clColor : TAlphaColor; a_dStartAngle : Single; a_dSizeRatio : Double);
 
   end;
 
@@ -319,6 +320,41 @@ begin
   m_arrVertices[nVertexCount + 3].pos[0] := a_pntA.X;
   m_arrVertices[nVertexCount + 3].pos[1] := a_pntB.Y;
   m_arrVertices[nVertexCount + 3].pos[2] := 0;
+
+  for nIndex := 0 to c_nVerticesNum - 1 do
+    m_arrVertices[nVertexCount + nIndex].AssignColor(a_clColor);
+
+  RenderItem.Count    := c_nVerticesNum;
+  RenderItem.Topology := D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+
+  m_lstRender.Add(RenderItem);
+end;
+
+//==============================================================================
+procedure TF2DCanvas.DrawArc(a_pntCenter : TPointF; a_nRadius : Double; a_clColor : TAlphaColor; a_dStartAngle : Single; a_dSizeRatio : Double);
+var
+  nIndex        : Integer;
+  nVertexCount  : Integer;
+  RenderItem    : TRenderQueueItem;
+  dAngle        : Double;
+const
+  c_nVerticesNum = 1024;
+begin
+  nVertexCount := Length(m_arrVertices);
+  SetLength(m_arrVertices, nVertexCount + c_nVerticesNum);
+
+  for nIndex := 0 to (c_nVerticesNum div 2) - 1 do
+  begin
+    dAngle := a_dSizeRatio * (nIndex / ((c_nVerticesNum div 2) - 1)) + a_dStartAngle;
+
+    m_arrVertices[nVertexCount + 2 * nIndex].pos[0] := a_pntCenter.X + Sin(dAngle * 2 * Pi) * a_nRadius;
+    m_arrVertices[nVertexCount + 2 * nIndex].pos[1] := a_pntCenter.Y + Cos(dAngle * 2 * Pi) * a_nRadius;
+    m_arrVertices[nVertexCount + 2 * nIndex].pos[2] := 0;
+
+    m_arrVertices[nVertexCount + 2 * nIndex + 1].pos[0] := a_pntCenter.X;
+    m_arrVertices[nVertexCount + 2 * nIndex + 1].pos[1] := a_pntCenter.Y;
+    m_arrVertices[nVertexCount + 2 * nIndex + 1].pos[2] := 0;
+  end;
 
   for nIndex := 0 to c_nVerticesNum - 1 do
     m_arrVertices[nVertexCount + nIndex].AssignColor(a_clColor);
