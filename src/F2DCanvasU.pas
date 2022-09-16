@@ -206,8 +206,10 @@ end;
 procedure TF2DCanvas.DrawLine(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
 var
   d3dMappedRes : TD3D11_Mapped_Subresource;
-  arrVertices  : array[0..1] of TScreenVertex;
+  arrVertices  : array of TScreenVertex;
 begin
+  SetLength(arrVertices, 2);
+
   arrVertices[0].pos[0] := a_pntA.X;
   arrVertices[0].pos[1] := a_pntA.Y;
   arrVertices[0].pos[2] := 0;
@@ -227,7 +229,7 @@ begin
   arrVertices[1].color[3] := a_clColor and $FF000000;
 
   m_f2dRenderer.DeviceContext.Map(m_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, d3dMappedRes);
-  CopyMemory(d3dMappedRes.pData, @arrVertices[0], SizeOf(arrVertices));
+  CopyMemory(d3dMappedRes.pData, @arrVertices[0], SizeOf(TScreenVertex) * Length(arrVertices));
   m_f2dRenderer.DeviceContext.Unmap(m_pVertexBuffer, 0);
 
   m_f2dRenderer.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
