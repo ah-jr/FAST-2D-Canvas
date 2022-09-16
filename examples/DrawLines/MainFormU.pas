@@ -23,10 +23,13 @@ type
     pnlD3dCanvas: TPanel;
 
     procedure FormCreate(Sender: TObject);
-    procedure FormPaint(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
 
   private
     m_f2dCanvas : TF2DCanvas;
+    m_tmrRender : TTimer;
+
+    procedure RenderScreen(Sender: TObject);
 
   end;
 
@@ -53,10 +56,24 @@ begin
   //////////////////////////////////////////////////////////////////////////////
   ///  Create canvas
   m_f2dCanvas := TF2DCanvas.Create(f2dProp);
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///  Set up render Timer
+  m_tmrRender := TTImer.Create(Self);
+  m_tmrRender.OnTimer  := RenderScreen;
+  m_tmrRender.Interval := 20;
+  m_tmrRender.Enabled  := True;
 end;
 
 //==============================================================================
-procedure TMainForm.FormPaint(Sender: TObject);
+procedure TMainForm.FormDestroy(Sender: TObject);
+begin
+  m_tmrRender.Enabled := False;
+  FreeAndNil(m_tmrRender);
+end;
+
+//==============================================================================
+procedure TMainForm.RenderScreen(Sender: TObject);
 begin
   m_f2dCanvas.BeginDraw;
 
@@ -86,6 +103,8 @@ begin
   // Draw Rectangles:
   m_f2dCanvas.DrawRect(PointF(50, 450), PointF(100, 500), $AFFF2050, 1);
   m_f2dCanvas.DrawRect(PointF(80, 480), PointF(130, 530), $8F50FF50, 1);
+
+  // Draw Rectangles:
 
 
   m_f2dCanvas.EndDraw;
