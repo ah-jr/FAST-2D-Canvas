@@ -42,6 +42,7 @@ type
     ///  Drawing functions:
     procedure Clear(a_clColor : TAlphaColor);
     procedure DrawLine(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
+    procedure DrawRect(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
 
   end;
 
@@ -79,13 +80,25 @@ var
   pPSBuffer        : ID3DBlob;
   pLinkage         : ID3D11ClassLinkage;
   nViewportCount   : UINT;
+  nIndex           : Integer;
 const
   c_nLayoutElementCount = 2;
 begin
   //////////////////////////////////////////////////////////////////////////////
   ///  Rasterizer
   d3dRastDesc := TD3D11_Rasterizer_Desc.Create(True);
-  d3dRastDesc.CullMode := D3D11_CULL_NONE;
+
+  d3dRastDesc.AntialiasedLineEnable := True;
+  d3dRastDesc.CullMode              := D3D11_CULL_BACK;
+  d3dRastDesc.DepthBias             := 0;
+  d3dRastDesc.DepthBiasClamp        := 0;
+  d3dRastDesc.DepthClipEnable       := True;
+  d3dRastDesc.FillMode              := D3D11_FILL_SOLID;
+  d3dRastDesc.FrontCounterClockwise := False;
+  d3dRastDesc.MultisampleEnable     := True;
+  d3dRastDesc.ScissorEnable         := False;
+  d3dRastDesc.SlopeScaledDepthBias  := 0;
+
   m_f2dRenderer.Device.CreateRasterizerState(D3D11_RASTERIZER_DESC(d3dRastDesc), pRasterizerState);
   m_f2dRenderer.DeviceContext.RSSetState(pRasterizerState);
 
@@ -122,14 +135,17 @@ begin
   ///  Blend
   d3dBlendDesc := TD3D11_Blend_Desc.Create(True);
 
-  d3dBlendDesc.RenderTarget[0].BlendEnable           := True;
-	d3dBlendDesc.RenderTarget[0].SrcBlend              := D3D11_BLEND_SRC_ALPHA;
-	d3dBlendDesc.RenderTarget[0].DestBlend             := D3D11_BLEND_INV_SRC_ALPHA;
-	d3dBlendDesc.RenderTarget[0].SrcBlendAlpha         := D3D11_BLEND_ONE;
-	d3dBlendDesc.RenderTarget[0].DestBlendAlpha        := D3D11_BLEND_ZERO;
-	d3dBlendDesc.RenderTarget[0].BlendOp               := D3D11_BLEND_OP_ADD;
-	d3dBlendDesc.RenderTarget[0].BlendOpAlpha          := D3D11_BLEND_OP_ADD;
-	d3dBlendDesc.RenderTarget[0].RenderTargetWriteMask := UINT8(D3D11_COLOR_WRITE_ENABLE_ALL);
+  for nIndex := 0 to Length(d3dBlendDesc.RenderTarget) - 1 do
+  begin
+    d3dBlendDesc.RenderTarget[nIndex].BlendEnable           := True;
+    d3dBlendDesc.RenderTarget[nIndex].SrcBlend              := D3D11_BLEND_SRC_ALPHA;
+    d3dBlendDesc.RenderTarget[nIndex].DestBlend             := D3D11_BLEND_INV_SRC_ALPHA;
+    d3dBlendDesc.RenderTarget[nIndex].SrcBlendAlpha         := D3D11_BLEND_ZERO;
+    d3dBlendDesc.RenderTarget[nIndex].DestBlendAlpha        := D3D11_BLEND_ONE;
+    d3dBlendDesc.RenderTarget[nIndex].BlendOp               := D3D11_BLEND_OP_ADD;
+    d3dBlendDesc.RenderTarget[nIndex].BlendOpAlpha          := D3D11_BLEND_OP_ADD;
+    d3dBlendDesc.RenderTarget[nIndex].RenderTargetWriteMask := UInt8(D3D11_COLOR_WRITE_ENABLE_ALL);
+  end;
 
   m_f2dRenderer.Device.CreateBlendState(d3dBlendDesc, m_pBlendDesc);
 
@@ -138,7 +154,7 @@ begin
   ZeroMemory(@d3dBufferDesc, Sizeof(d3dBufferDesc));
 
 	d3dBufferDesc.Usage          := D3D11_USAGE_DYNAMIC;
-	d3dBufferDesc.ByteWidth      := Sizeof(TScreenVertex) * 3;
+	d3dBufferDesc.ByteWidth      := Sizeof(TScreenVertex) * c_nMaxVertices;
 	d3dBufferDesc.BindFlags      := D3D11_BIND_VERTEX_BUFFER;
 	d3dBufferDesc.CPUAccessFlags := D3D11_CPU_ACCESS_WRITE;
 	d3dBufferDesc.MiscFlags      := 0;
@@ -181,7 +197,7 @@ begin
 	m_f2dRenderer.DeviceContext.VSSetShader(m_pVertexShader, nil, 0);
 	m_f2dRenderer.DeviceContext.PSSetShader(m_pPixelShader, nil, 0);
 
-	m_f2dRenderer.DeviceContext.OMSetBlendState(m_pBlendDesc, D3DColor4f(1.0, 1.0, 1.0, 1.0), $FFFFFFFF);
+	m_f2dRenderer.DeviceContext.OMSetBlendState(m_pBlendDesc, D3DColor4f(0.0, 0.0, 0.0, 0.0), $FFFFFFFF);
 	m_f2dRenderer.DeviceContext.VSSetConstantBuffers(0, 1, m_pScreenBuffer);
 	m_f2dRenderer.DeviceContext.IASetInputLayout(m_pInputLayout);
 
@@ -210,12 +226,12 @@ var
 begin
   SetLength(arrVertices, 2);
 
-  arrVertices[0].pos[0] := a_pntA.X;
-  arrVertices[0].pos[1] := a_pntA.Y;
+  arrVertices[0].pos[0] := a_pntA.X + 0.5;
+  arrVertices[0].pos[1] := a_pntA.Y + 0.5;
   arrVertices[0].pos[2] := 0;
 
-  arrVertices[1].pos[0] := a_pntB.X;
-  arrVertices[1].pos[1] := a_pntB.Y;
+  arrVertices[1].pos[0] := a_pntB.X + 0.5;
+  arrVertices[1].pos[1] := a_pntB.Y + 0.5;
   arrVertices[1].pos[2] := 0;
 
   arrVertices[0].color[0] := a_clColor and $00FF0000;
@@ -233,7 +249,49 @@ begin
   m_f2dRenderer.DeviceContext.Unmap(m_pVertexBuffer, 0);
 
   m_f2dRenderer.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-  m_f2dRenderer.DeviceContext.Draw(3, 0);
+  m_f2dRenderer.DeviceContext.Draw(2, 0);
+  m_f2dRenderer.Paint;
+end;
+
+//==============================================================================
+procedure TF2DCanvas.DrawRect(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
+var
+  d3dMappedRes : TD3D11_Mapped_Subresource;
+  arrVertices  : array of TScreenVertex;
+  nIndex       : Integer;
+begin
+  SetLength(arrVertices, 4);
+
+  arrVertices[0].pos[0] := a_pntB.X + 0.5;
+  arrVertices[0].pos[1] := a_pntA.Y + 0.5;
+  arrVertices[0].pos[2] := 0;
+
+  arrVertices[1].pos[0] := a_pntB.X + 0.5;
+  arrVertices[1].pos[1] := a_pntB.Y + 0.5;
+  arrVertices[1].pos[2] := 0;
+
+  arrVertices[2].pos[0] := a_pntA.X + 0.5;
+  arrVertices[2].pos[1] := a_pntA.Y + 0.5;
+  arrVertices[2].pos[2] := 0;
+
+  arrVertices[3].pos[0] := a_pntA.X + 0.5;
+  arrVertices[3].pos[1] := a_pntB.Y + 0.5;
+  arrVertices[3].pos[2] := 0;
+
+  for nIndex := 0 to 3 do
+  begin
+    arrVertices[nIndex].color[0] := a_clColor and $00FF0000;
+    arrVertices[nIndex].color[1] := a_clColor and $0000FF00;
+    arrVertices[nIndex].color[2] := a_clColor and $000000FF;
+    arrVertices[nIndex].color[3] := a_clColor and $FF000000;
+  end;
+
+  m_f2dRenderer.DeviceContext.Map(m_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, d3dMappedRes);
+  CopyMemory(d3dMappedRes.pData, @arrVertices[0], SizeOf(TScreenVertex) * Length(arrVertices));
+  m_f2dRenderer.DeviceContext.Unmap(m_pVertexBuffer, 0);
+
+  m_f2dRenderer.DeviceContext.IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_Trianglestrip);
+  m_f2dRenderer.DeviceContext.Draw(4, 0);
   m_f2dRenderer.Paint;
 end;
 

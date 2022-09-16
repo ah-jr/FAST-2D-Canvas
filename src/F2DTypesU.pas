@@ -23,6 +23,9 @@ type
 
   PScreenVertex = ^TScreenVertex;
 
+const
+  c_nMaxVertices = 1024;
+
 implementation
 
 end.
