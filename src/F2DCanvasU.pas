@@ -48,6 +48,9 @@ type
 
 implementation
 
+uses
+  Math;
+
 //==============================================================================
 constructor TF2DCanvas.Create(a_cpProp : TF2DCanvasProperties);
 begin
@@ -224,18 +227,33 @@ var
   d3dMappedRes : TD3D11_Mapped_Subresource;
   arrVertices  : array of TScreenVertex;
   nIndex       : Integer;
+  dAngleSin    : Double;
+  dAngleCos    : Double;
+  dLength      : Double;
 const
-  c_nVerticesNum = 2;
+  c_nVerticesNum = 4;
 begin
   SetLength(arrVertices, c_nVerticesNum);
 
-  arrVertices[0].pos[0] := a_pntA.X + 0.5;
-  arrVertices[0].pos[1] := a_pntA.Y + 0.5;
+  dLength := Sqrt(Power(a_pntB.Y - a_pntA.Y, 2) + Power(a_pntB.X - a_pntA.X, 2));
+  dAngleSin := (a_pntB.Y - a_pntA.Y)/dLength;
+  dAngleCos := (a_pntB.X - a_pntA.X)/dLength;
+
+  arrVertices[0].pos[0] := a_pntA.X + 0.5 + (a_nWidth / 2) * dAngleSin;
+  arrVertices[0].pos[1] := a_pntA.Y + 0.5 - (a_nWidth / 2) * dAngleCos;
   arrVertices[0].pos[2] := 0;
 
-  arrVertices[1].pos[0] := a_pntB.X + 0.5;
-  arrVertices[1].pos[1] := a_pntB.Y + 0.5;
+  arrVertices[1].pos[0] := a_pntB.X + 0.5 + (a_nWidth / 2) * dAngleSin;
+  arrVertices[1].pos[1] := a_pntB.Y + 0.5 - (a_nWidth / 2) * dAngleCos;
   arrVertices[1].pos[2] := 0;
+
+  arrVertices[2].pos[0] := a_pntA.X + 0.5 - (a_nWidth / 2) * dAngleSin;
+  arrVertices[2].pos[1] := a_pntA.Y + 0.5 + (a_nWidth / 2) * dAngleCos;
+  arrVertices[2].pos[2] := 0;
+
+  arrVertices[3].pos[0] := a_pntB.X + 0.5 - (a_nWidth / 2) * dAngleSin;
+  arrVertices[3].pos[1] := a_pntB.Y + 0.5 + (a_nWidth / 2) * dAngleCos;
+  arrVertices[3].pos[2] := 0;
 
   for nIndex := 0 to c_nVerticesNum - 1 do
     arrVertices[nIndex].AssignColor(a_clColor);
@@ -244,7 +262,7 @@ begin
   CopyMemory(d3dMappedRes.pData, @arrVertices[0], SizeOf(TScreenVertex) * Length(arrVertices));
   m_f2dRenderer.DeviceContext.Unmap(m_pVertexBuffer, 0);
 
-  m_f2dRenderer.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+  m_f2dRenderer.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
   m_f2dRenderer.DeviceContext.Draw(c_nVerticesNum, 0);
   m_f2dRenderer.Paint;
 end;
