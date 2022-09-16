@@ -63,6 +63,7 @@ begin
   m_f2dCanvas.Clear($FF000000);
 
   m_f2dCanvas.DrawRect(PointF(50, 50), PointF(100, 100), $FFFF0000, 1);
+  m_f2dCanvas.DrawRect(PointF(80, 80), PointF(130, 130), $8F50FF50, 1);
 
   // Write 'Lines' with lines
 //  m_f2dCanvas.DrawLine(PointF(50, 50), PointF(50, 200), $FFFF0000, 1);
@@ -81,11 +82,11 @@ begin
 //  m_f2dCanvas.DrawLine(PointF(400, 140), PointF(500, 140), $FFFFFF00, 1);
 //  m_f2dCanvas.DrawLine(PointF(400, 200), PointF(500, 200), $FFFFFF00, 1);
 //
-//  m_f2dCanvas.DrawLine(PointF(550, 80), PointF(650, 80), $FF00FFFF, 1);
-//  m_f2dCanvas.DrawLine(PointF(550, 140), PointF(650, 140), $FF00FFFF, 1);
-//  m_f2dCanvas.DrawLine(PointF(550, 200), PointF(650, 200), $FF00FFFF, 1);
-//  m_f2dCanvas.DrawLine(PointF(550, 80), PointF(550, 140), $FF00FFFF, 1);
-//  m_f2dCanvas.DrawLine(PointF(650, 140), PointF(650, 200), $FF00FFFF, 1);
+  m_f2dCanvas.DrawLine(PointF(550, 80), PointF(650, 80), $FF00FFFF, 1);
+  m_f2dCanvas.DrawLine(PointF(550, 140), PointF(650, 140), $FF00FFFF, 1);
+  m_f2dCanvas.DrawLine(PointF(550, 200), PointF(650, 200), $FF00FFFF, 1);
+  m_f2dCanvas.DrawLine(PointF(550, 80), PointF(550, 140), $FF00FFFF, 1);
+  m_f2dCanvas.DrawLine(PointF(650, 140), PointF(650, 200), $FF00FFFF, 1);
 
   m_f2dCanvas.EndDraw;
 end;

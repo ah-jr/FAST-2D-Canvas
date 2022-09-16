@@ -140,8 +140,8 @@ begin
     d3dBlendDesc.RenderTarget[nIndex].BlendEnable           := True;
     d3dBlendDesc.RenderTarget[nIndex].SrcBlend              := D3D11_BLEND_SRC_ALPHA;
     d3dBlendDesc.RenderTarget[nIndex].DestBlend             := D3D11_BLEND_INV_SRC_ALPHA;
-    d3dBlendDesc.RenderTarget[nIndex].SrcBlendAlpha         := D3D11_BLEND_ZERO;
-    d3dBlendDesc.RenderTarget[nIndex].DestBlendAlpha        := D3D11_BLEND_ONE;
+    d3dBlendDesc.RenderTarget[nIndex].SrcBlendAlpha         := D3D11_BLEND_ONE;
+    d3dBlendDesc.RenderTarget[nIndex].DestBlendAlpha        := D3D11_BLEND_ZERO;
     d3dBlendDesc.RenderTarget[nIndex].BlendOp               := D3D11_BLEND_OP_ADD;
     d3dBlendDesc.RenderTarget[nIndex].BlendOpAlpha          := D3D11_BLEND_OP_ADD;
     d3dBlendDesc.RenderTarget[nIndex].RenderTargetWriteMask := UInt8(D3D11_COLOR_WRITE_ENABLE_ALL);
@@ -262,35 +262,35 @@ var
 begin
   SetLength(arrVertices, 4);
 
-  arrVertices[0].pos[0] := a_pntB.X + 0.5;
-  arrVertices[0].pos[1] := a_pntA.Y + 0.5;
+  arrVertices[0].pos[0] := a_pntB.X;
+  arrVertices[0].pos[1] := a_pntA.Y;
   arrVertices[0].pos[2] := 0;
 
-  arrVertices[1].pos[0] := a_pntB.X + 0.5;
-  arrVertices[1].pos[1] := a_pntB.Y + 0.5;
+  arrVertices[1].pos[0] := a_pntB.X;
+  arrVertices[1].pos[1] := a_pntB.Y;
   arrVertices[1].pos[2] := 0;
 
-  arrVertices[2].pos[0] := a_pntA.X + 0.5;
-  arrVertices[2].pos[1] := a_pntA.Y + 0.5;
+  arrVertices[2].pos[0] := a_pntA.X;
+  arrVertices[2].pos[1] := a_pntA.Y;
   arrVertices[2].pos[2] := 0;
 
-  arrVertices[3].pos[0] := a_pntA.X + 0.5;
-  arrVertices[3].pos[1] := a_pntB.Y + 0.5;
+  arrVertices[3].pos[0] := a_pntA.X;
+  arrVertices[3].pos[1] := a_pntB.Y;
   arrVertices[3].pos[2] := 0;
 
   for nIndex := 0 to 3 do
   begin
-    arrVertices[nIndex].color[0] := a_clColor and $00FF0000;
-    arrVertices[nIndex].color[1] := a_clColor and $0000FF00;
-    arrVertices[nIndex].color[2] := a_clColor and $000000FF;
-    arrVertices[nIndex].color[3] := a_clColor and $FF000000;
+    arrVertices[nIndex].color[0] := ((a_clColor and $00FF0000) shr (2 * 8)) / 255;
+    arrVertices[nIndex].color[1] := ((a_clColor and $0000FF00) shr (1 * 8)) / 255;
+    arrVertices[nIndex].color[2] := ((a_clColor and $000000FF) shr (0 * 8)) / 255;
+    arrVertices[nIndex].color[3] := ((a_clColor and $FF000000) shr (3 * 8)) / 255;
   end;
 
   m_f2dRenderer.DeviceContext.Map(m_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, d3dMappedRes);
   CopyMemory(d3dMappedRes.pData, @arrVertices[0], SizeOf(TScreenVertex) * Length(arrVertices));
   m_f2dRenderer.DeviceContext.Unmap(m_pVertexBuffer, 0);
 
-  m_f2dRenderer.DeviceContext.IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_Trianglestrip);
+  m_f2dRenderer.DeviceContext.IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
   m_f2dRenderer.DeviceContext.Draw(4, 0);
   m_f2dRenderer.Paint;
 end;

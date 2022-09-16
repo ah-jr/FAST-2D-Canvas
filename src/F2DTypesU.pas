@@ -3,7 +3,8 @@ unit F2DTypesU;
 interface
 
 uses
-  Winapi.Windows;
+  Winapi.Windows,
+  System.UITypes;
 
 type
   TF2DCanvasProperties = record
@@ -19,6 +20,7 @@ type
   TScreenVertex = record
     pos   : T4DSingleArray;
     color : T4DSingleArray;
+    procedure AssignColor(a_clColor : TAlphaColor);
   end;
 
   PScreenVertex = ^TScreenVertex;
@@ -27,5 +29,11 @@ const
   c_nMaxVertices = 1024;
 
 implementation
+
+//==============================================================================
+procedure TScreenVertex.AssignColor(a_clColor : TAlphaColor);
+begin
+
+end;
 
 end.
