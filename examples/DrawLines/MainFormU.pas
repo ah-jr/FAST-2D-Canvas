@@ -28,6 +28,7 @@ type
   private
     m_f2dCanvas : TF2DCanvas;
     m_tmrRender : TTimer;
+    m_nAngleDif : Integer;
 
     procedure RenderScreen(Sender: TObject);
 
@@ -37,6 +38,9 @@ var
   MainForm : TMainForm;
 
 implementation
+
+uses
+  Math;
 
 {$R *.dfm}
 
@@ -63,6 +67,10 @@ begin
   m_tmrRender.OnTimer  := RenderScreen;
   m_tmrRender.Interval := 20;
   m_tmrRender.Enabled  := True;
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///  Variables
+  m_nAngleDif := 0;
 end;
 
 //==============================================================================
@@ -74,6 +82,11 @@ end;
 
 //==============================================================================
 procedure TMainForm.RenderScreen(Sender: TObject);
+var
+  pntRotate : TPointF;
+const
+  c_nRotatorLength = 100;
+  c_nRotatePeriod  = 20;
 begin
   m_f2dCanvas.BeginDraw;
 
@@ -104,8 +117,15 @@ begin
   m_f2dCanvas.DrawRect(PointF(50, 450), PointF(100, 500), $AFFF2050, 1);
   m_f2dCanvas.DrawRect(PointF(80, 480), PointF(130, 530), $8F50FF50, 1);
 
-  // Draw Rectangles:
+  // Draw Rotating Line:
+  pntRotate.X := 400 + c_nRotatorLength * Sin(-2 * Pi * (m_nAngleDif/c_nRotatePeriod));
+  pntRotate.Y := 400 + c_nRotatorLength * Cos(-2 * Pi * (m_nAngleDif/c_nRotatePeriod));
 
+  m_f2dCanvas.DrawLine(PointF(400, 400), pntRotate, $FFFFFFFF, 3);
+
+  Inc(m_nAngleDif);
+  if m_nAngleDif >= c_nRotatePeriod then
+    m_nAngleDif := 0;
 
   m_f2dCanvas.EndDraw;
 end;
