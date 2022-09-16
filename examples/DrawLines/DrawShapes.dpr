@@ -1,4 +1,4 @@
-program DrawLines;
+program DrawShapes;
 
 uses
   Vcl.Forms,

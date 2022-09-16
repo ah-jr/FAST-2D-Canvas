@@ -223,8 +223,11 @@ procedure TF2DCanvas.DrawLine(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TA
 var
   d3dMappedRes : TD3D11_Mapped_Subresource;
   arrVertices  : array of TScreenVertex;
+  nIndex       : Integer;
+const
+  c_nVerticesNum = 2;
 begin
-  SetLength(arrVertices, 2);
+  SetLength(arrVertices, c_nVerticesNum);
 
   arrVertices[0].pos[0] := a_pntA.X + 0.5;
   arrVertices[0].pos[1] := a_pntA.Y + 0.5;
@@ -234,22 +237,15 @@ begin
   arrVertices[1].pos[1] := a_pntB.Y + 0.5;
   arrVertices[1].pos[2] := 0;
 
-  arrVertices[0].color[0] := a_clColor and $00FF0000;
-  arrVertices[0].color[1] := a_clColor and $0000FF00;
-  arrVertices[0].color[2] := a_clColor and $000000FF;
-  arrVertices[0].color[3] := a_clColor and $FF000000;
-
-  arrVertices[1].color[0] := a_clColor and $00FF0000;
-  arrVertices[1].color[1] := a_clColor and $0000FF00;
-  arrVertices[1].color[2] := a_clColor and $000000FF;
-  arrVertices[1].color[3] := a_clColor and $FF000000;
+  for nIndex := 0 to c_nVerticesNum - 1 do
+    arrVertices[nIndex].AssignColor(a_clColor);
 
   m_f2dRenderer.DeviceContext.Map(m_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, d3dMappedRes);
   CopyMemory(d3dMappedRes.pData, @arrVertices[0], SizeOf(TScreenVertex) * Length(arrVertices));
   m_f2dRenderer.DeviceContext.Unmap(m_pVertexBuffer, 0);
 
   m_f2dRenderer.DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-  m_f2dRenderer.DeviceContext.Draw(2, 0);
+  m_f2dRenderer.DeviceContext.Draw(c_nVerticesNum, 0);
   m_f2dRenderer.Paint;
 end;
 
@@ -259,8 +255,10 @@ var
   d3dMappedRes : TD3D11_Mapped_Subresource;
   arrVertices  : array of TScreenVertex;
   nIndex       : Integer;
+const
+  c_nVerticesNum = 4;
 begin
-  SetLength(arrVertices, 4);
+  SetLength(arrVertices, c_nVerticesNum);
 
   arrVertices[0].pos[0] := a_pntB.X;
   arrVertices[0].pos[1] := a_pntA.Y;
@@ -278,20 +276,15 @@ begin
   arrVertices[3].pos[1] := a_pntB.Y;
   arrVertices[3].pos[2] := 0;
 
-  for nIndex := 0 to 3 do
-  begin
-    arrVertices[nIndex].color[0] := ((a_clColor and $00FF0000) shr (2 * 8)) / 255;
-    arrVertices[nIndex].color[1] := ((a_clColor and $0000FF00) shr (1 * 8)) / 255;
-    arrVertices[nIndex].color[2] := ((a_clColor and $000000FF) shr (0 * 8)) / 255;
-    arrVertices[nIndex].color[3] := ((a_clColor and $FF000000) shr (3 * 8)) / 255;
-  end;
+  for nIndex := 0 to c_nVerticesNum - 1 do
+    arrVertices[nIndex].AssignColor(a_clColor);
 
   m_f2dRenderer.DeviceContext.Map(m_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, d3dMappedRes);
   CopyMemory(d3dMappedRes.pData, @arrVertices[0], SizeOf(TScreenVertex) * Length(arrVertices));
   m_f2dRenderer.DeviceContext.Unmap(m_pVertexBuffer, 0);
 
   m_f2dRenderer.DeviceContext.IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-  m_f2dRenderer.DeviceContext.Draw(4, 0);
+  m_f2dRenderer.DeviceContext.Draw(c_nVerticesNum, 0);
   m_f2dRenderer.Paint;
 end;
 

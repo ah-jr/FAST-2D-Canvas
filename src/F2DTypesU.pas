@@ -33,7 +33,10 @@ implementation
 //==============================================================================
 procedure TScreenVertex.AssignColor(a_clColor : TAlphaColor);
 begin
-
+  color[0] := ((a_clColor and $00FF0000) shr (2 * 8)) / 255;
+  color[1] := ((a_clColor and $0000FF00) shr (1 * 8)) / 255;
+  color[2] := ((a_clColor and $000000FF) shr (0 * 8)) / 255;
+  color[3] := ((a_clColor and $FF000000) shr (3 * 8)) / 255;
 end;
 
 end.
