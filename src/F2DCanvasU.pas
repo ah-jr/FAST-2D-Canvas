@@ -38,6 +38,7 @@ type
     destructor Destroy; Override;
 
     procedure InitRenderer;
+    procedure ChangeSize(a_nWidth : Integer; a_nHeight : Integer);
 
     procedure BeginDraw;
     procedure EndDraw;
@@ -198,6 +199,12 @@ begin
   m_f2dRenderer.DeviceContext.Map(m_pScreenBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, d3dMappedRes);
   CopyMemory(d3dMappedRes.pData, @m_matProj, SizeOf(TXMMATRIX));
   m_f2dRenderer.DeviceContext.Unmap(m_pScreenBuffer, 0);
+end;
+
+//==============================================================================
+procedure TF2DCanvas.ChangeSize(a_nWidth : Integer; a_nHeight : Integer);
+begin
+  m_f2dRenderer.Resize(a_nWidth, a_nHeight);
 end;
 
 //==============================================================================

@@ -28,7 +28,7 @@ type
     m_RenderTargetView    : ID3D11RenderTargetView;
     m_Viewport            : TD3D11_VIEWPORT;
 
-    m_bInitialized : Boolean;
+    m_bInitialized        : Boolean;
 
     procedure Init;
     procedure Reset;
@@ -39,11 +39,14 @@ type
 
     procedure CompileShader(szFilePath : LPCWSTR; szFunc : LPCSTR; szShaderModel : LPCSTR; out pBuffer : ID3DBlob);
 
+    procedure Resize(a_nWidth : Integer; a_nHeight : Integer);
     procedure Clear(a_clColor: TFourSingleArray);
     procedure Paint;
 
-    property Device        : ID3D11Device        read m_Device        write m_Device;
-    property DeviceContext : ID3D11DeviceContext read m_DeviceContext write m_DeviceContext;
+    property Device           : ID3D11Device           read m_Device               write m_Device;
+    property DeviceContext    : ID3D11DeviceContext    read m_DeviceContext        write m_DeviceContext;
+    property SwapChain        : IDXGISwapChain         read m_Swapchain            write m_Swapchain;
+    property RenderTargetView : ID3D11RenderTargetView read m_RenderTargetView     write m_RenderTargetView;
 
   end;
 
@@ -67,6 +70,25 @@ destructor TF2DRenderer.Destroy;
 begin
   Reset;
   Inherited;
+end;
+
+//==============================================================================
+procedure TF2DRenderer.Resize(a_nWidth : Integer; a_nHeight : Integer);
+var
+  pBackbuffer : ID3D11Texture2D;
+begin
+  m_RenderTargetView := nil;
+
+  try
+    m_SwapChain.ResizeBuffers(1, a_nWidth, a_nHeight, DXGI_FORMAT_R8G8B8A8_UNORM, Cardinal(D3D11_CREATE_DEVICE_DEBUG));
+
+    m_Swapchain.GetBuffer(0, ID3D11Texture2D, pBackbuffer);
+    m_Device.CreateRenderTargetView(pBackbuffer, nil, m_RenderTargetView);
+    m_DeviceContext.OMSetRenderTargets(1, m_RenderTargetView, nil);
+
+  finally
+    pBackbuffer := nil;
+  end;
 end;
 
 //==============================================================================
@@ -107,7 +129,6 @@ begin
     Reset;
 
   try
-
     FillChar(dxgiSwapchainDesc, SizeOf(DXGI_SWAP_CHAIN_DESC), 0);
     with dxgiSwapchainDesc do
     begin

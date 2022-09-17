@@ -24,6 +24,7 @@ type
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormResize(Sender: TObject);
 
   private
     m_f2dCanvas : TF2DCanvas;
@@ -78,6 +79,14 @@ procedure TMainForm.FormDestroy(Sender: TObject);
 begin
   m_tmrRender.Enabled := False;
   FreeAndNil(m_tmrRender);
+end;
+
+//==============================================================================
+procedure TMainForm.FormResize(Sender: TObject);
+begin
+  m_f2dCanvas.ChangeSize(ClientWidth, ClientHeight);
+
+  RenderScreen(nil);
 end;
 
 //==============================================================================
