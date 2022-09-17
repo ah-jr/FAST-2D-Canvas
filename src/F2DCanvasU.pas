@@ -29,9 +29,15 @@ type
 
     m_pBlendDesc    : ID3D11BlendState;
     m_matProj       : TXMMATRIX;
-
     m_arrVertices   : array of TScreenVertex;
     m_lstRender     : TList<TRenderQueueItem>;
+
+    m_clDraw        : TAlphaColor;
+    m_clFill        : TAlphaColor;
+    m_lcLineCap     : TF2DLineCap;
+    m_sLineWidth    : Single;
+
+    procedure GetWidth(var a_sWidth : Single);
 
   public
     constructor Create(a_cpProp : TF2DCanvasProperties); reintroduce;
@@ -46,9 +52,14 @@ type
     ////////////////////////////////////////////////////////////////////////////
     ///  Drawing functions:
     procedure Clear(a_clColor : TAlphaColor);
-    procedure DrawLine(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
-    procedure DrawRect(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
-    procedure DrawArc(a_pntCenter : TPointF; a_nRadiusX : Double; a_nRadiusY : Double; a_clColor : TAlphaColor; a_dStartAngle : Single; a_dSizeRatio : Double);
+    procedure DrawLine(a_pntA : TPointF; a_pntB : TPointF; a_nWidth : Single = -1);
+    procedure DrawRect(a_pntA : TPointF; a_pntB : TPointF; a_nWidth : Single = -1);
+    procedure DrawArc(a_pntCenter : TPointF; a_nRadiusX : Double; a_nRadiusY : Double; a_dStartAngle : Single; a_dSizeRatio : Double; a_nWidth : Single = -1);
+
+    property DrawColor : TAlphaColor   read m_clDraw      write m_clDraw;
+    property FillColor : TAlphaColor   read m_clFill      write m_clFill;
+    property LineCap   : TF2DLineCap   read m_lcLineCap   write m_lcLineCap;
+    property LineWidth : Single        read m_sLineWidth  write m_sLineWidth;
 
   end;
 
@@ -63,6 +74,11 @@ begin
   m_f2dRenderer := TF2DRenderer.Create(a_cpProp);
 
   m_lstRender := TList<TRenderQueueItem>.Create;
+
+  m_sLineWidth := 1;
+  m_clDraw     := c_clBlack;
+  m_clFill     := c_clBlack;
+  m_lcLineCap  := lcMitter;
 
   InitRenderer;
 end;
@@ -257,7 +273,7 @@ begin
 end;
 
 //==============================================================================
-procedure TF2DCanvas.DrawLine(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
+procedure TF2DCanvas.DrawLine(a_pntA : TPointF; a_pntB : TPointF; a_nWidth : Single = -1);
 var
   nIndex       : Integer;
   dSin         : Double;
@@ -268,6 +284,8 @@ var
 const
   c_nVerticesNum = 4;
 begin
+  GetWidth(a_nWidth);
+
   nVertexCount := Length(m_arrVertices);
   SetLength(m_arrVertices, nVertexCount + c_nVerticesNum);
 
@@ -292,19 +310,22 @@ begin
   m_arrVertices[nVertexCount + 3].pos[2] := 0;
 
   for nIndex := 0 to c_nVerticesNum - 1 do
-    m_arrVertices[nVertexCount + nIndex].AssignColor(a_clColor);
+    m_arrVertices[nVertexCount + nIndex].AssignColor(m_clDraw);
 
   RenderItem.Count    := c_nVerticesNum;
   RenderItem.Topology := D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
   m_lstRender.Add(RenderItem);
 
-  dAngle := dAngle / (2 * Pi);
-  DrawArc(a_pntA, a_nWidth/2, a_nWidth/2, a_clColor, 0.5 - dAngle, 0.5);
-  DrawArc(a_pntB, a_nWidth/2, a_nWidth/2, a_clColor, - dAngle, 0.5);
+  if m_lcLineCap = lcRound then
+  begin
+    dAngle := dAngle / (2 * Pi);
+    DrawArc(a_pntA, a_nWidth/2, a_nWidth/2, 0.5 - dAngle, 0.5, a_nWidth);
+    DrawArc(a_pntB, a_nWidth/2, a_nWidth/2, -dAngle, 0.5, a_nWidth);
+  end;
 end;
 
 //==============================================================================
-procedure TF2DCanvas.DrawRect(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
+procedure TF2DCanvas.DrawRect(a_pntA : TPointF; a_pntB : TPointF; a_nWidth : Single = -1);
 var
   nIndex       : Integer;
   nVertexCount : Integer;
@@ -312,6 +333,8 @@ var
 const
   c_nVerticesNum = 4;
 begin
+  GetWidth(a_nWidth);
+
   nVertexCount := Length(m_arrVertices);
   SetLength(m_arrVertices, nVertexCount + c_nVerticesNum);
 
@@ -332,7 +355,7 @@ begin
   m_arrVertices[nVertexCount + 3].pos[2] := 0;
 
   for nIndex := 0 to c_nVerticesNum - 1 do
-    m_arrVertices[nVertexCount + nIndex].AssignColor(a_clColor);
+    m_arrVertices[nVertexCount + nIndex].AssignColor(m_clDraw);
 
   RenderItem.Count    := c_nVerticesNum;
   RenderItem.Topology := D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
@@ -341,7 +364,7 @@ begin
 end;
 
 //==============================================================================
-procedure TF2DCanvas.DrawArc(a_pntCenter : TPointF; a_nRadiusX : Double; a_nRadiusY : Double; a_clColor : TAlphaColor; a_dStartAngle : Single; a_dSizeRatio : Double);
+procedure TF2DCanvas.DrawArc(a_pntCenter : TPointF; a_nRadiusX : Double; a_nRadiusY : Double; a_dStartAngle : Single; a_dSizeRatio : Double; a_nWidth : Single = -1);
 var
   nIndex        : Integer;
   nVertexCount  : Integer;
@@ -350,6 +373,8 @@ var
 const
   c_nVerticesNum = 1024;
 begin
+  GetWidth(a_nWidth);
+
   nVertexCount := Length(m_arrVertices);
   SetLength(m_arrVertices, nVertexCount + c_nVerticesNum);
 
@@ -367,12 +392,19 @@ begin
   end;
 
   for nIndex := 0 to c_nVerticesNum - 1 do
-    m_arrVertices[nVertexCount + nIndex].AssignColor(a_clColor);
+    m_arrVertices[nVertexCount + nIndex].AssignColor(m_clDraw);
 
   RenderItem.Count    := c_nVerticesNum;
   RenderItem.Topology := D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
 
   m_lstRender.Add(RenderItem);
+end;
+
+//==============================================================================
+procedure TF2DCanvas.GetWidth(var a_sWidth : Single);
+begin
+  if a_sWidth < 0 then
+    a_sWidth := m_sLineWidth;
 end;
 
 //==============================================================================

@@ -30,8 +30,18 @@ type
     Topology : D3D11_PRIMITIVE_TOPOLOGY;
   end;
 
+  TF2DLineCap = (lcRound, lcMitter);
+
+
 const
+  //////////////////////////////////////////////////////////////////////////////
+  ///  Constants:
   c_nMaxVertices = 1000000;
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///  Colors:
+  c_clBlack = $FF000000;
+
 
 implementation
 
