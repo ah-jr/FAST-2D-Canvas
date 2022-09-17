@@ -19,14 +19,20 @@ uses
   F2DCanvasU;
 
 type
-  TMainForm = class(TForm)
-    pnlD3dCanvas: TPanel;
+  TContainer = class(TPanel)
+    private
+      procedure WMPaint(var Msg : TWMPaint); message WM_PAINT;
+      procedure WMEraseBkgnd(var Msg : TMessage); message WM_ERASEBKGND;
+  end;
 
+  TMainForm = class(TForm)
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormResize(Sender: TObject);
 
   private
+    m_pnlD3dCanvas : TContainer;
+
     m_f2dCanvas : TF2DCanvas;
     m_tmrRender : TTimer;
     m_nAngleDif : Integer;
@@ -46,15 +52,35 @@ uses
 {$R *.dfm}
 
 //==============================================================================
+procedure TContainer.WMPaint(var Msg : TWMPaint);
+var
+  PS: TPaintStruct;
+begin
+  BeginPaint(Handle, PS);
+  EndPaint(Handle, PS);
+end;
+
+//==============================================================================
+procedure TContainer.WMEraseBkgnd(var Msg : TMessage);
+begin
+  //
+end;
+
+//==============================================================================
 procedure TMainForm.FormCreate(Sender: TObject);
 var
   f2dProp : TF2DCanvasProperties;
 begin
+  m_pnlD3dCanvas := TContainer.Create(Self);
+  m_pnlD3dCanvas.Parent := Self;
+  m_pnlD3dCanvas.Align  := alClient;
+
+
   with f2dProp do
   begin
-    Hwnd   := pnlD3dCanvas.Handle;
-    Width  := pnlD3dCanvas.Width;
-    Height := pnlD3dCanvas.Height;
+    Hwnd   := m_pnlD3dCanvas.Handle;
+    Width  := m_pnlD3dCanvas.Width;
+    Height := m_pnlD3dCanvas.Height;
     MSAA   := 8;
   end;
 
@@ -105,7 +131,7 @@ begin
   m_f2dCanvas.DrawLine(PointF(50, 50), PointF(50, 200), $FFFF0000, 3);
   m_f2dCanvas.DrawLine(PointF(50, 200), PointF(150, 200), $FFFF0000, 3);
 
-  m_f2dCanvas.DrawLine(PointF(200, 80), PointF(200, 200), $FF00FF00, 3);
+  m_f2dCanvas.DrawLine(PointF(200, 80), PointF(200, 200), $FF00FF00, 6);
 
   m_f2dCanvas.DrawLine(PointF(250, 80), PointF(250, 200), $FF0000FF, 3);
   m_f2dCanvas.DrawLine(PointF(250, 80), PointF(350, 200), $FF0000FF, 3);
@@ -122,13 +148,17 @@ begin
   m_f2dCanvas.DrawLine(PointF(550, 80), PointF(550, 140), $FF00FFFF, 3);
   m_f2dCanvas.DrawLine(PointF(650, 140), PointF(650, 200), $FF00FFFF, 3);
 
+  m_f2dCanvas.DrawLine(PointF(50, 300), PointF(240, 400), $5FF04F4F, 30);
+
   // Draw Rectangles:
   m_f2dCanvas.DrawRect(PointF(50, 450), PointF(100, 500), $AFFF2050, 1);
   m_f2dCanvas.DrawRect(PointF(80, 480), PointF(130, 530), $8F50FF50, 1);
 
   // Draw Arcs:
-  m_f2dCanvas.DrawArc(PointF(400, 400), c_nRotatorLength, $FF103F4F, 0, 0.75);
-  m_f2dCanvas.DrawArc(PointF(400, 400), c_nRotatorLength, $FF205F2F, 0.75, 0.25);
+  m_f2dCanvas.DrawArc(PointF(400, 400), c_nRotatorLength, c_nRotatorLength, $FF103F4F, 0, 0.75);
+  m_f2dCanvas.DrawArc(PointF(400, 400), c_nRotatorLength, c_nRotatorLength, $FF205F2F, 0.75, 0.25);
+
+  m_f2dCanvas.DrawArc(PointF(600, 400), 60, 20, $FFF08F22, 0, 1);
 
   // Draw Rotating Line:
   pntRotate.X := 400 + c_nRotatorLength * Sin(-2 * Pi * (m_nAngleDif/c_nRotatePeriod));

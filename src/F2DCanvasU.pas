@@ -48,7 +48,7 @@ type
     procedure Clear(a_clColor : TAlphaColor);
     procedure DrawLine(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
     procedure DrawRect(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
-    procedure DrawArc(a_pntCenter : TPointF; a_nRadius : Double; a_clColor : TAlphaColor; a_dStartAngle : Single; a_dSizeRatio : Double);
+    procedure DrawArc(a_pntCenter : TPointF; a_nRadiusX : Double; a_nRadiusY : Double; a_clColor : TAlphaColor; a_dStartAngle : Single; a_dSizeRatio : Double);
 
   end;
 
@@ -260,9 +260,9 @@ end;
 procedure TF2DCanvas.DrawLine(a_pntA : TPointF; a_pntB : TPointF; a_clColor : TAlphaColor; a_nWidth : Single);
 var
   nIndex       : Integer;
-  dAngleSin    : Double;
-  dAngleCos    : Double;
-  dLength      : Double;
+  dSin         : Double;
+  dCos         : Double;
+  dAngle       : Double;
   nVertexCount : Integer;
   RenderItem   : TRenderQueueItem;
 const
@@ -271,24 +271,24 @@ begin
   nVertexCount := Length(m_arrVertices);
   SetLength(m_arrVertices, nVertexCount + c_nVerticesNum);
 
-  dLength := Sqrt(Power(a_pntB.Y - a_pntA.Y, 2) + Power(a_pntB.X - a_pntA.X, 2));
-  dAngleSin := (a_pntB.Y - a_pntA.Y)/dLength;
-  dAngleCos := (a_pntB.X - a_pntA.X)/dLength;
+  dAngle := ArcTan2(a_pntB.Y - a_pntA.Y, a_pntB.X - a_pntA.X);
+  dSin   := Sin(dAngle);
+  dCos   := Cos(dAngle);
 
-  m_arrVertices[nVertexCount + 0].pos[0] := a_pntA.X + 0.5 + (a_nWidth / 2) * dAngleSin;
-  m_arrVertices[nVertexCount + 0].pos[1] := a_pntA.Y + 0.5 - (a_nWidth / 2) * dAngleCos;
+  m_arrVertices[nVertexCount + 0].pos[0] := a_pntA.X + (a_nWidth / 2) * dSin;
+  m_arrVertices[nVertexCount + 0].pos[1] := a_pntA.Y - (a_nWidth / 2) * dCos;
   m_arrVertices[nVertexCount + 0].pos[2] := 0;
 
-  m_arrVertices[nVertexCount + 1].pos[0] := a_pntB.X + 0.5 + (a_nWidth / 2) * dAngleSin;
-  m_arrVertices[nVertexCount + 1].pos[1] := a_pntB.Y + 0.5 - (a_nWidth / 2) * dAngleCos;
+  m_arrVertices[nVertexCount + 1].pos[0] := a_pntB.X + (a_nWidth / 2) * dSin;
+  m_arrVertices[nVertexCount + 1].pos[1] := a_pntB.Y - (a_nWidth / 2) * dCos;
   m_arrVertices[nVertexCount + 1].pos[2] := 0;
 
-  m_arrVertices[nVertexCount + 2].pos[0] := a_pntA.X + 0.5 - (a_nWidth / 2) * dAngleSin;
-  m_arrVertices[nVertexCount + 2].pos[1] := a_pntA.Y + 0.5 + (a_nWidth / 2) * dAngleCos;
+  m_arrVertices[nVertexCount + 2].pos[0] := a_pntA.X - (a_nWidth / 2) * dSin;
+  m_arrVertices[nVertexCount + 2].pos[1] := a_pntA.Y + (a_nWidth / 2) * dCos;
   m_arrVertices[nVertexCount + 2].pos[2] := 0;
 
-  m_arrVertices[nVertexCount + 3].pos[0] := a_pntB.X + 0.5 - (a_nWidth / 2) * dAngleSin;
-  m_arrVertices[nVertexCount + 3].pos[1] := a_pntB.Y + 0.5 + (a_nWidth / 2) * dAngleCos;
+  m_arrVertices[nVertexCount + 3].pos[0] := a_pntB.X - (a_nWidth / 2) * dSin;
+  m_arrVertices[nVertexCount + 3].pos[1] := a_pntB.Y + (a_nWidth / 2) * dCos;
   m_arrVertices[nVertexCount + 3].pos[2] := 0;
 
   for nIndex := 0 to c_nVerticesNum - 1 do
@@ -296,8 +296,11 @@ begin
 
   RenderItem.Count    := c_nVerticesNum;
   RenderItem.Topology := D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
-
   m_lstRender.Add(RenderItem);
+
+  dAngle := dAngle / (2 * Pi);
+  DrawArc(a_pntA, a_nWidth/2, a_nWidth/2, a_clColor, 0.5 - dAngle, 0.5);
+  DrawArc(a_pntB, a_nWidth/2, a_nWidth/2, a_clColor, - dAngle, 0.5);
 end;
 
 //==============================================================================
@@ -338,7 +341,7 @@ begin
 end;
 
 //==============================================================================
-procedure TF2DCanvas.DrawArc(a_pntCenter : TPointF; a_nRadius : Double; a_clColor : TAlphaColor; a_dStartAngle : Single; a_dSizeRatio : Double);
+procedure TF2DCanvas.DrawArc(a_pntCenter : TPointF; a_nRadiusX : Double; a_nRadiusY : Double; a_clColor : TAlphaColor; a_dStartAngle : Single; a_dSizeRatio : Double);
 var
   nIndex        : Integer;
   nVertexCount  : Integer;
@@ -354,8 +357,8 @@ begin
   begin
     dAngle := a_dSizeRatio * (nIndex / ((c_nVerticesNum div 2) - 1)) + a_dStartAngle;
 
-    m_arrVertices[nVertexCount + 2 * nIndex].pos[0] := a_pntCenter.X + Sin(dAngle * 2 * Pi) * a_nRadius;
-    m_arrVertices[nVertexCount + 2 * nIndex].pos[1] := a_pntCenter.Y + Cos(dAngle * 2 * Pi) * a_nRadius;
+    m_arrVertices[nVertexCount + 2 * nIndex].pos[0] := a_pntCenter.X + Sin(dAngle * 2 * Pi) * a_nRadiusX;
+    m_arrVertices[nVertexCount + 2 * nIndex].pos[1] := a_pntCenter.Y + Cos(dAngle * 2 * Pi) * a_nRadiusY;
     m_arrVertices[nVertexCount + 2 * nIndex].pos[2] := 0;
 
     m_arrVertices[nVertexCount + 2 * nIndex + 1].pos[0] := a_pntCenter.X;

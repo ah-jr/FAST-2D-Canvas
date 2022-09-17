@@ -16,13 +16,4 @@ object MainForm: TMainForm
   OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 13
-  object pnlD3dCanvas: TPanel
-    Left = 0
-    Top = 0
-    Width = 740
-    Height = 600
-    Align = alClient
-    Caption = 'pnlD3dCanvas'
-    TabOrder = 0
-  end
 end
