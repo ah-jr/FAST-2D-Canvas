@@ -160,9 +160,13 @@ begin
   m_f2dCanvas.DrawColor := $AFF0AF1F;
   m_f2dCanvas.DrawRect(PointF(80, 480), PointF(130, 530));
 
+  m_f2dCanvas.DrawColor := $AF202FFF;
+  m_f2dCanvas.DrawRoundRect(PointF(170, 450), PointF(270, 550), 10);
+
   // Draw Arcs:
-  m_f2dCanvas.DrawColor := $FFEFEFEF;
+  m_f2dCanvas.DrawColor := $FF1F1F1F;
   m_f2dCanvas.DrawArc(PointF(400, 400), c_nRotatorLength, c_nRotatorLength, 0, 0.75);
+  m_f2dCanvas.DrawColor := $FF402F1F;
   m_f2dCanvas.DrawArc(PointF(400, 400), c_nRotatorLength, c_nRotatorLength, 0.75, 0.25);
 
   m_f2dCanvas.DrawColor := $FFFAAA20;
