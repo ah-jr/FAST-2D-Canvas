@@ -364,6 +364,8 @@ begin
   DrawLine(a_pntA.X - a_sLineWidth/2, a_pntB.Y, a_pntB.X + a_sLineWidth/2, a_pntB.Y, a_sLineWidth);
   DrawLine(a_pntA.X, a_pntA.Y + a_sLineWidth/2, a_pntA.X, a_pntB.Y - a_sLineWidth/2, a_sLineWidth);
   DrawLine(a_pntB.X, a_pntA.Y + a_sLineWidth/2, a_pntB.X, a_pntB.Y - a_sLineWidth/2, a_sLineWidth);
+
+
 end;
 
 //=============================================================================
@@ -378,10 +380,15 @@ begin
   GetLineWidth(a_sLineWidth);
   TransformPoints(a_pntA, a_pntB);
 
-  DrawLine(a_pntA.X - a_sLineWidth/2, a_pntA.Y, a_pntB.X + a_sLineWidth/2, a_pntA.Y, a_sLineWidth);
-  DrawLine(a_pntA.X - a_sLineWidth/2, a_pntB.Y, a_pntB.X + a_sLineWidth/2, a_pntB.Y, a_sLineWidth);
-  DrawLine(a_pntA.X, a_pntA.Y + a_sLineWidth/2, a_pntA.X, a_pntB.Y - a_sLineWidth/2, a_sLineWidth);
-  DrawLine(a_pntB.X, a_pntA.Y + a_sLineWidth/2, a_pntB.X, a_pntB.Y - a_sLineWidth/2, a_sLineWidth);
+  DrawLine(a_pntA.X + a_dRadius, a_pntA.Y, a_pntB.X - a_dRadius, a_pntA.Y, a_sLineWidth);
+  DrawLine(a_pntA.X + a_dRadius, a_pntB.Y, a_pntB.X - a_dRadius, a_pntB.Y, a_sLineWidth);
+  DrawLine(a_pntA.X, a_pntA.Y + a_dRadius, a_pntA.X, a_pntB.Y - a_dRadius, a_sLineWidth);
+  DrawLine(a_pntB.X, a_pntA.Y + a_dRadius, a_pntB.X, a_pntB.Y - a_dRadius, a_sLineWidth);
+
+  DrawArc(a_pntB.X - a_dRadius, a_pntA.Y + a_dRadius, a_dRadius, a_dRadius, 0.25, 0.25, a_sLineWidth);
+  DrawArc(a_pntB.X - a_dRadius, a_pntB.Y - a_dRadius, a_dRadius, a_dRadius, 0,    0.25, a_sLineWidth);
+  DrawArc(a_pntA.X + a_dRadius, a_pntA.Y + a_dRadius, a_dRadius, a_dRadius, 0.5,  0.25, a_sLineWidth);
+  DrawArc(a_pntA.X + a_dRadius, a_pntB.Y - a_dRadius, a_dRadius, a_dRadius, 0.75, 0.25, a_sLineWidth);
 end;
 
 //==============================================================================

@@ -171,16 +171,6 @@ begin
   for i := 0 to 100 do
     m_f2dCanvas.DrawLine(50 + 6*i, 225, 50 + 6*(i+1), 235);
 
-
-  // Draw rectangles
-  m_f2dCanvas.FillColor := $AF505FFF;
-  m_f2dCanvas.FillRect(PointF(50, 450), PointF(100, 500));
-  m_f2dCanvas.FillColor := $AFF0AF1F;
-  m_f2dCanvas.FillRect(PointF(80, 480), PointF(130, 530));
-
-  m_f2dCanvas.DrawColor := $AFFFFFFF;
-  m_f2dCanvas.DrawRect(400 - c_nRotatorLength, 400 - c_nRotatorLength, 2*c_nRotatorLength, 2*c_nRotatorLength, 5);
-
   // Draw arcs
   m_f2dCanvas.FillColor := $FF1F1F1F;
   m_f2dCanvas.FillArc(PointF(400, 400), c_nRotatorLength, c_nRotatorLength, 0, 0.75);
@@ -201,6 +191,15 @@ begin
   Inc(m_nAngleDif);
   if m_nAngleDif >= c_nRotatePeriod then
     m_nAngleDif := 0;
+
+  // Draw rectangles
+  m_f2dCanvas.FillColor := $AF505FFF;
+  m_f2dCanvas.FillRect(PointF(50, 450), PointF(100, 500));
+  m_f2dCanvas.FillColor := $AFF0AF1F;
+  m_f2dCanvas.FillRect(PointF(80, 480), PointF(130, 530));
+
+  m_f2dCanvas.DrawColor := $AFFFFFFF;
+  m_f2dCanvas.DrawRoundRect(400 - c_nRotatorLength, 400 - c_nRotatorLength, 2*c_nRotatorLength, 2*c_nRotatorLength, 15, 5);
 
   m_f2dCanvas.EndDraw;
 end;
