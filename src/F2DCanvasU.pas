@@ -401,8 +401,8 @@ begin
   GetLineWidth(a_sLineWidth);
   TransformPoints(a_pntA, a_pntB);
 
-  if (Abs(a_pntB.Y - a_pntA.Y) <= 2 * a_sRadius) or
-     (Abs(a_pntB.X - a_pntA.X) <= 2 * a_sRadius) then
+  if (a_pntB.Y - a_pntA.Y <= 2 * a_sRadius) or
+     (a_pntB.X - a_pntA.X <= 2 * a_sRadius) then
     Exit;
 
   //////////////////////////////////////////////////////////////////////////////
@@ -511,7 +511,7 @@ var
   RenderItem    : TRenderQueueItem;
   dAngle        : Double;
 const
-  c_nVerticesNum = 1024;
+  c_nVerticesNum = 128;
 begin
   GetLineWidth(a_sLineWidth);
 
