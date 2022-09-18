@@ -55,13 +55,13 @@ type
     procedure Clear(a_clColor : TAlphaColor);
 
     procedure DrawLine(a_pntA, a_pntB : TPointF; a_sLineWidth : Single = -1); overload;
-    procedure DrawLine(a_sPntAX, a_sPntAY, a_sPntBX, a_sPntBY : Double; a_sLineWidth : Single = -1); overload;
+    procedure DrawLine(a_dPntAX, a_dPntAY, a_dPntBX, a_dPntBY : Double; a_sLineWidth : Single = -1); overload;
     procedure DrawRect(a_pntA, a_pntB : TPointF; a_sLineWidth : Single = -1);  overload;
-    procedure DrawRect(a_sLeft, a_sTop, a_sWidth, a_sHeight : Double; a_sLineWidth : Single = -1); overload;
-    procedure DrawRoundRect(a_pntA, a_pntB : TPointF; a_sRadius : Double; a_sLineWidth : Single = -1);  overload;
-    procedure DrawRoundRect(a_sLeft, a_sTop, a_sWidth, a_sHeight, a_sRadius : Double; a_sLineWidth : Single = -1); overload;
-    procedure DrawArc(a_pntC : TPointF; a_sRadiusX, a_sRadiusY, a_sStart, a_sSize : Double; a_sLineWidth : Single = -1); overload;
-    procedure DrawArc(a_sLeft, a_sTop, a_sRadiusX, a_sRadiusY, a_sStart, a_sSize : Double; a_sLineWidth : Single = -1); overload;
+    procedure DrawRect(a_dLeft, a_dTop, a_dWidth, a_dHeight : Double; a_sLineWidth : Single = -1); overload;
+    procedure DrawRoundRect(a_pntA, a_pntB : TPointF; a_dRadius : Double; a_sLineWidth : Single = -1);  overload;
+    procedure DrawRoundRect(a_dLeft, a_dTop, a_dWidth, a_dHeight, a_dRadius : Double; a_sLineWidth : Single = -1); overload;
+    procedure DrawArc(a_pntC : TPointF; a_dRadiusX, a_dRadiusY, a_dStart, a_dSize : Double; a_sLineWidth : Single = -1); overload;
+    procedure DrawArc(a_dLeft, a_dTop, a_dRadiusX, a_dRadiusY, a_dStart, a_dSize : Double; a_sLineWidth : Single = -1); overload;
 
     property DrawColor : TAlphaColor   read m_clDraw      write m_clDraw;
     property FillColor : TAlphaColor   read m_clFill      write m_clFill;
@@ -280,9 +280,9 @@ begin
 end;
 
 //==============================================================================
-procedure TF2DCanvas.DrawLine(a_sPntAX, a_sPntAY, a_sPntBX, a_sPntBY : Double; a_sLineWidth : Single = -1);
+procedure TF2DCanvas.DrawLine(a_dPntAX, a_dPntAY, a_dPntBX, a_dPntBY : Double; a_sLineWidth : Single = -1);
 begin
-  DrawLine(PointF(a_sPntAX, a_sPntAY), PointF(a_sPntBX, a_sPntBY), a_sLineWidth);
+  DrawLine(PointF(a_dPntAX, a_dPntAY), PointF(a_dPntBX, a_dPntBY), a_sLineWidth);
 end;
 
 //==============================================================================
@@ -338,9 +338,9 @@ begin
 end;
 
 //==============================================================================
-procedure TF2DCanvas.DrawRect(a_sLeft, a_sTop, a_sWidth, a_sHeight : Double; a_sLineWidth : Single = -1);
+procedure TF2DCanvas.DrawRect(a_dLeft, a_dTop, a_dWidth, a_dHeight : Double; a_sLineWidth : Single = -1);
 begin
-  DrawRect(PointF(a_sLeft, a_sTop), PointF(a_sLeft + a_sWidth, a_sTop + a_sHeight), a_sLineWidth);
+  DrawRect(PointF(a_dLeft, a_dTop), PointF(a_dLeft + a_dWidth, a_dTop + a_dHeight), a_sLineWidth);
 end;
 
 //==============================================================================
@@ -384,13 +384,13 @@ begin
 end;
 
 //==============================================================================
-procedure TF2DCanvas.DrawRoundRect(a_sLeft, a_sTop, a_sWidth, a_sHeight, a_sRadius : Double; a_sLineWidth : Single = -1);
+procedure TF2DCanvas.DrawRoundRect(a_dLeft, a_dTop, a_dWidth, a_dHeight, a_dRadius : Double; a_sLineWidth : Single = -1);
 begin
-  DrawRoundRect(PointF(a_sLeft, a_sTop), PointF(a_sLeft + a_sWidth, a_sTop + a_sHeight), a_sRadius, a_sLineWidth);
+  DrawRoundRect(PointF(a_dLeft, a_dTop), PointF(a_dLeft + a_dWidth, a_dTop + a_dHeight), a_dRadius, a_sLineWidth);
 end
 ;
 //==============================================================================
-procedure TF2DCanvas.DrawRoundRect(a_pntA, a_pntB : TPointF; a_sRadius : Double; a_sLineWidth : Single = -1);
+procedure TF2DCanvas.DrawRoundRect(a_pntA, a_pntB : TPointF; a_dRadius : Double; a_sLineWidth : Single = -1);
 var
   nIndex       : Integer;
   nVertexCount : Integer;
@@ -401,8 +401,8 @@ begin
   GetLineWidth(a_sLineWidth);
   TransformPoints(a_pntA, a_pntB);
 
-  if (a_pntB.Y - a_pntA.Y <= 2 * a_sRadius) or
-     (a_pntB.X - a_pntA.X <= 2 * a_sRadius) then
+  if (a_pntB.Y - a_pntA.Y <= 2 * a_dRadius) or
+     (a_pntB.X - a_pntA.X <= 2 * a_dRadius) then
     Exit;
 
   //////////////////////////////////////////////////////////////////////////////
@@ -411,19 +411,19 @@ begin
   SetLength(m_arrVertices, nVertexCount + c_nVerticesNum);
 
   m_arrVertices[nVertexCount + 0].pos[0] := a_pntB.X;
-  m_arrVertices[nVertexCount + 0].pos[1] := a_pntA.Y + a_sRadius;
+  m_arrVertices[nVertexCount + 0].pos[1] := a_pntA.Y + a_dRadius;
   m_arrVertices[nVertexCount + 0].pos[2] := 0;
 
   m_arrVertices[nVertexCount + 1].pos[0] := a_pntB.X;
-  m_arrVertices[nVertexCount + 1].pos[1] := a_pntB.Y - a_sRadius;
+  m_arrVertices[nVertexCount + 1].pos[1] := a_pntB.Y - a_dRadius;
   m_arrVertices[nVertexCount + 1].pos[2] := 0;
 
   m_arrVertices[nVertexCount + 2].pos[0] := a_pntA.X;
-  m_arrVertices[nVertexCount + 2].pos[1] := a_pntA.Y + a_sRadius;
+  m_arrVertices[nVertexCount + 2].pos[1] := a_pntA.Y + a_dRadius;
   m_arrVertices[nVertexCount + 2].pos[2] := 0;
 
   m_arrVertices[nVertexCount + 3].pos[0] := a_pntA.X;
-  m_arrVertices[nVertexCount + 3].pos[1] := a_pntB.Y - a_sRadius;
+  m_arrVertices[nVertexCount + 3].pos[1] := a_pntB.Y - a_dRadius;
   m_arrVertices[nVertexCount + 3].pos[2] := 0;
 
   for nIndex := 0 to c_nVerticesNum - 1 do
@@ -438,20 +438,20 @@ begin
   nVertexCount := Length(m_arrVertices);
   SetLength(m_arrVertices, nVertexCount + c_nVerticesNum);
 
-  m_arrVertices[nVertexCount + 0].pos[0] := a_pntB.X - a_sRadius;
+  m_arrVertices[nVertexCount + 0].pos[0] := a_pntB.X - a_dRadius;
   m_arrVertices[nVertexCount + 0].pos[1] := a_pntA.Y;
   m_arrVertices[nVertexCount + 0].pos[2] := 0;
 
-  m_arrVertices[nVertexCount + 1].pos[0] := a_pntB.X - a_sRadius;
-  m_arrVertices[nVertexCount + 1].pos[1] := a_pntA.Y + a_sRadius;
+  m_arrVertices[nVertexCount + 1].pos[0] := a_pntB.X - a_dRadius;
+  m_arrVertices[nVertexCount + 1].pos[1] := a_pntA.Y + a_dRadius;
   m_arrVertices[nVertexCount + 1].pos[2] := 0;
 
-  m_arrVertices[nVertexCount + 2].pos[0] := a_pntA.X + a_sRadius;
+  m_arrVertices[nVertexCount + 2].pos[0] := a_pntA.X + a_dRadius;
   m_arrVertices[nVertexCount + 2].pos[1] := a_pntA.Y;
   m_arrVertices[nVertexCount + 2].pos[2] := 0;
 
-  m_arrVertices[nVertexCount + 3].pos[0] := a_pntA.X + a_sRadius;
-  m_arrVertices[nVertexCount + 3].pos[1] := a_pntA.Y + a_sRadius;
+  m_arrVertices[nVertexCount + 3].pos[0] := a_pntA.X + a_dRadius;
+  m_arrVertices[nVertexCount + 3].pos[1] := a_pntA.Y + a_dRadius;
   m_arrVertices[nVertexCount + 3].pos[2] := 0;
 
   for nIndex := 0 to c_nVerticesNum - 1 do
@@ -466,19 +466,19 @@ begin
   nVertexCount := Length(m_arrVertices);
   SetLength(m_arrVertices, nVertexCount + c_nVerticesNum);
 
-  m_arrVertices[nVertexCount + 0].pos[0] := a_pntB.X - a_sRadius;
-  m_arrVertices[nVertexCount + 0].pos[1] := a_pntB.Y - a_sRadius;
+  m_arrVertices[nVertexCount + 0].pos[0] := a_pntB.X - a_dRadius;
+  m_arrVertices[nVertexCount + 0].pos[1] := a_pntB.Y - a_dRadius;
   m_arrVertices[nVertexCount + 0].pos[2] := 0;
 
-  m_arrVertices[nVertexCount + 1].pos[0] := a_pntB.X - a_sRadius;
+  m_arrVertices[nVertexCount + 1].pos[0] := a_pntB.X - a_dRadius;
   m_arrVertices[nVertexCount + 1].pos[1] := a_pntB.Y;
   m_arrVertices[nVertexCount + 1].pos[2] := 0;
 
-  m_arrVertices[nVertexCount + 2].pos[0] := a_pntA.X + a_sRadius;
-  m_arrVertices[nVertexCount + 2].pos[1] := a_pntB.Y - a_sRadius;
+  m_arrVertices[nVertexCount + 2].pos[0] := a_pntA.X + a_dRadius;
+  m_arrVertices[nVertexCount + 2].pos[1] := a_pntB.Y - a_dRadius;
   m_arrVertices[nVertexCount + 2].pos[2] := 0;
 
-  m_arrVertices[nVertexCount + 3].pos[0] := a_pntA.X + a_sRadius;
+  m_arrVertices[nVertexCount + 3].pos[0] := a_pntA.X + a_dRadius;
   m_arrVertices[nVertexCount + 3].pos[1] := a_pntB.Y;
   m_arrVertices[nVertexCount + 3].pos[2] := 0;
 
@@ -491,20 +491,20 @@ begin
 
   //////////////////////////////////////////////////////////////////////////////
   // Arcs :
-  DrawArc(a_pntB.X - a_sRadius, a_pntA.Y + a_sRadius, a_sRadius, a_sRadius, 0.25, 0.25, a_sLineWidth);
-  DrawArc(a_pntB.X - a_sRadius, a_pntB.Y - a_sRadius, a_sRadius, a_sRadius, 0,    0.25, a_sLineWidth);
-  DrawArc(a_pntA.X + a_sRadius, a_pntA.Y + a_sRadius, a_sRadius, a_sRadius, 0.5,  0.25, a_sLineWidth);
-  DrawArc(a_pntA.X + a_sRadius, a_pntB.Y - a_sRadius, a_sRadius, a_sRadius, 0.75, 0.25, a_sLineWidth);
+  DrawArc(a_pntB.X - a_dRadius, a_pntA.Y + a_dRadius, a_dRadius, a_dRadius, 0.25, 0.25, a_sLineWidth);
+  DrawArc(a_pntB.X - a_dRadius, a_pntB.Y - a_dRadius, a_dRadius, a_dRadius, 0,    0.25, a_sLineWidth);
+  DrawArc(a_pntA.X + a_dRadius, a_pntA.Y + a_dRadius, a_dRadius, a_dRadius, 0.5,  0.25, a_sLineWidth);
+  DrawArc(a_pntA.X + a_dRadius, a_pntB.Y - a_dRadius, a_dRadius, a_dRadius, 0.75, 0.25, a_sLineWidth);
 
 end;
 //==============================================================================
-procedure TF2DCanvas.DrawArc(a_sLeft, a_sTop, a_sRadiusX, a_sRadiusY, a_sStart, a_sSize : Double; a_sLineWidth : Single = -1);
+procedure TF2DCanvas.DrawArc(a_dLeft, a_dTop, a_dRadiusX, a_dRadiusY, a_dStart, a_dSize : Double; a_sLineWidth : Single = -1);
 begin
-  DrawArc(PointF(a_sLeft, a_sTop), a_sRadiusX, a_sRadiusY, a_sStart, a_sSize, a_sLineWidth);
+  DrawArc(PointF(a_dLeft, a_dTop), a_dRadiusX, a_dRadiusY, a_dStart, a_dSize, a_sLineWidth);
 end;
 
 //==============================================================================
-procedure TF2DCanvas.DrawArc(a_pntC : TPointF; a_sRadiusX, a_sRadiusY, a_sStart, a_sSize : Double; a_sLineWidth : Single = -1);
+procedure TF2DCanvas.DrawArc(a_pntC : TPointF; a_dRadiusX, a_dRadiusY, a_dStart, a_dSize : Double; a_sLineWidth : Single = -1);
 var
   nIndex        : Integer;
   nVertexCount  : Integer;
@@ -520,10 +520,10 @@ begin
 
   for nIndex := 0 to (c_nVerticesNum div 2) - 1 do
   begin
-    dAngle := a_sSize * (nIndex / ((c_nVerticesNum div 2) - 1)) + a_sStart;
+    dAngle := a_dSize * (nIndex / ((c_nVerticesNum div 2) - 1)) + a_dStart;
 
-    m_arrVertices[nVertexCount + 2 * nIndex].pos[0] := a_pntC.X + Sin(dAngle * 2 * Pi) * a_sRadiusX;
-    m_arrVertices[nVertexCount + 2 * nIndex].pos[1] := a_pntC.Y + Cos(dAngle * 2 * Pi) * a_sRadiusY;
+    m_arrVertices[nVertexCount + 2 * nIndex].pos[0] := a_pntC.X + Sin(dAngle * 2 * Pi) * a_dRadiusX;
+    m_arrVertices[nVertexCount + 2 * nIndex].pos[1] := a_pntC.Y + Cos(dAngle * 2 * Pi) * a_dRadiusY;
     m_arrVertices[nVertexCount + 2 * nIndex].pos[2] := 0;
 
     m_arrVertices[nVertexCount + 2 * nIndex + 1].pos[0] := a_pntC.X;

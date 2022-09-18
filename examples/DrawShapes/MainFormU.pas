@@ -118,7 +118,7 @@ end;
 //==============================================================================
 procedure TMainForm.RenderScreen(Sender: TObject);
 var
-  pntRotate : TPointF;
+  pntRotate : TPointF;           i : Integer;
 const
   c_nRotatorLength = 100;
   c_nRotatePeriod  = 50;
@@ -165,6 +165,12 @@ begin
   m_f2dCanvas.DrawLine(PointF(50, 320), PointF(240, 420));
   m_f2dCanvas.LineWidth := 2;
   m_f2dCanvas.DrawLine(PointF(50, 350), PointF(240, 450));
+
+  m_f2dCanvas.DrawColor := $FFBBBBBB;
+  m_f2dCanvas.LineWidth := 2;
+  for i := 0 to 100 do
+    m_f2dCanvas.DrawLine(50 + 6*i, 225, 50 + 6*(i+1), 235);
+
 
   // Draw rectangles
   m_f2dCanvas.DrawColor := $AF505FFF;
