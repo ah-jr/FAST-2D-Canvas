@@ -50,10 +50,10 @@ type
     procedure BeginDraw;
     procedure EndDraw;
 
-    ////////////////////////////////////////////////////////////////////////////
-    ///  Drawing functions:
     procedure Clear(a_clColor : TAlphaColor);
 
+    ////////////////////////////////////////////////////////////////////////////
+    ///  Drawing procedures:
     procedure DrawLine(a_pntA, a_pntB : TPointF; a_sLineWidth : Single = -1); overload;
     procedure DrawLine(a_dPntAX, a_dPntAY, a_dPntBX, a_dPntBY : Double; a_sLineWidth : Single = -1); overload;
     procedure DrawRect(a_pntA, a_pntB : TPointF; a_sLineWidth : Single = -1);  overload;
@@ -69,6 +69,11 @@ type
     procedure FillRoundRect(a_dLeft, a_dTop, a_dWidth, a_dHeight, a_dRadius : Double); overload;
     procedure FillArc(a_pntC : TPointF; a_dRadiusX, a_dRadiusY, a_dStart, a_dSize : Double); overload;
     procedure FillArc(a_dLeft, a_dTop, a_dRadiusX, a_dRadiusY, a_dStart, a_dSize : Double); overload;
+
+    ////////////////////////////////////////////////////////////////////////////
+    ///  Geometry procedures:
+    procedure FillPath(a_lstPoints : TList<TPointF>);
+
 
     property DrawColor : TAlphaColor   read m_clDraw      write m_clDraw;
     property FillColor : TAlphaColor   read m_clFill      write m_clFill;
@@ -628,6 +633,125 @@ begin
   RenderItem.Topology := D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
 
   m_lstRender.Add(RenderItem);
+end;
+
+//==============================================================================
+procedure TF2DCanvas.FillPath(a_lstPoints : TList<TPointF>);
+var
+  a_lstRemaining : TList<TPointF>;
+  nPntIdx        : Integer;
+  nAuxIdx        : Integer;
+  nNextIdx       : Integer;
+  nLastIdx       : Integer;
+  pntCurr        : TPointF;
+  pntNext        : TPointF;
+  pntLast        : TPointF;
+  bContains      : Boolean;
+  nVertexCount   : Integer;
+  RenderItem     : TRenderQueueItem;
+const
+  c_nVerticesNum = 3;
+begin
+  if a_lstPoints.Count < c_nVerticesNum then
+    Exit;
+
+  a_lstRemaining := TList<TPointF>.Create;
+
+  for nPntIdx := 0 to a_lstPoints.Count - 1 do
+    a_lstRemaining.Add(a_lstPoints.Items[nPntIdx]);
+
+  nPntIdx   := 0;
+  bContains := False;
+
+  while a_lstRemaining.Count > c_nVerticesNum do
+  begin
+    if nPntIdx = a_lstRemaining.Count - 1
+      then nNextIdx := 0
+      else nNextIdx := nPntIdx + 1;
+
+    if nPntIdx = 0
+      then nLastIdx := a_lstRemaining.Count - 1
+      else nLastIdx := nPntIdx - 1;
+
+    pntCurr := a_lstRemaining.Items[nPntIdx];
+    pntLast := a_lstRemaining.Items[nLastIdx];
+    pntNext := a_lstRemaining.Items[nNextIdx];
+
+    if GetVectorsAngle(pntCurr, pntNext, pntLast) < Pi then
+    begin
+      for nAuxIdx := 0 to a_lstPoints.Count - 1 do
+      begin
+        if not (nAuxIdx in [nPntIdx, nNextIdx, nLastIdx]) then
+          bContains := bContains or PointInTriangle(a_lstPoints.Items[nAuxIdx], pntLast, pntCurr, pntNext);
+      end;
+
+      if not bContains then
+      begin
+        nVertexCount := Length(m_arrVertices);
+        SetLength(m_arrVertices, nVertexCount + c_nVerticesNum);
+
+        m_arrVertices[nVertexCount + 0].pos[0] := pntLast.X;
+        m_arrVertices[nVertexCount + 0].pos[1] := pntLast.Y;
+        m_arrVertices[nVertexCount + 0].pos[2] := 0;
+
+        m_arrVertices[nVertexCount + 1].pos[0] := pntCurr.X;
+        m_arrVertices[nVertexCount + 1].pos[1] := pntCurr.Y;
+        m_arrVertices[nVertexCount + 1].pos[2] := 0;
+
+        m_arrVertices[nVertexCount + 2].pos[0] := pntNext.X;
+        m_arrVertices[nVertexCount + 2].pos[1] := pntNext.Y;
+        m_arrVertices[nVertexCount + 2].pos[2] := 0;
+
+        for nAuxIdx := 0 to c_nVerticesNum - 1 do
+          m_arrVertices[nVertexCount + nAuxIdx].AssignColor(m_clFill);
+
+        RenderItem.Count    := c_nVerticesNum;
+        RenderItem.Topology := D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+        m_lstRender.Add(RenderItem);
+
+        a_lstRemaining.Remove(pntCurr);
+        nPntIdx := 0;
+      end
+      else
+      begin
+        nPntIdx := nPntIdx + 1;
+      end;
+    end
+    else
+    begin
+      nPntIdx := nPntIdx + 1;
+    end;
+
+    bContains := False;
+  end;
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///  Connect last 3 points
+  nVertexCount := Length(m_arrVertices);
+  SetLength(m_arrVertices, nVertexCount + c_nVerticesNum);
+
+  m_arrVertices[nVertexCount + 0].pos[0] := a_lstRemaining.Items[0].X;
+  m_arrVertices[nVertexCount + 0].pos[1] := a_lstRemaining.Items[0].Y;
+  m_arrVertices[nVertexCount + 0].pos[2] := 0;
+
+  m_arrVertices[nVertexCount + 1].pos[0] := a_lstRemaining.Items[1].X;
+  m_arrVertices[nVertexCount + 1].pos[1] := a_lstRemaining.Items[1].Y;
+  m_arrVertices[nVertexCount + 1].pos[2] := 0;
+
+  m_arrVertices[nVertexCount + 2].pos[0] := a_lstRemaining.Items[2].X;
+  m_arrVertices[nVertexCount + 2].pos[1] := a_lstRemaining.Items[2].Y;
+  m_arrVertices[nVertexCount + 2].pos[2] := 0;
+
+  for nAuxIdx := 0 to c_nVerticesNum - 1 do
+    m_arrVertices[nVertexCount + nAuxIdx].AssignColor(m_clFill);
+
+  RenderItem.Count    := c_nVerticesNum;
+  RenderItem.Topology := D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+  m_lstRender.Add(RenderItem);
+
+  a_lstRemaining.Free;
 end;
 
 //==============================================================================

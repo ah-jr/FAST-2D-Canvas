@@ -5,6 +5,7 @@ interface
 uses
   Winapi.Windows,
   Winapi.D3D11,
+  System.Types,
   Classes;
 
 type
@@ -43,7 +44,14 @@ type
   function D3DColor4f(a_dRed, a_dGreen, a_dBlue, a_dAlpha: Single): TFourSingleArray; inline;
   function D3DColor4fARGB(a_ARGB: Cardinal): TFourSingleArray; inline;
 
+  function Sign(a_pntA, a_pntB, a_pntC : TPointF) : Double;
+  function PointInTriangle(a_pntP, a_pntA, a_pntB, a_pntC : TPointF) : Boolean;
+  function GetVectorsAngle(a_pntRef, a_pntA, a_pntB : TPointF) : Double;
+
 implementation
+
+uses
+  Math;
 
 //==============================================================================
 constructor TXMVECTOR.Create(x, y, z, w: single);
@@ -115,4 +123,46 @@ begin
   Result[2] := Byte(a_ARGB) / 255;
   Result[3] := Byte(a_ARGB shr 24) / 255;
 end;
+
+//==============================================================================
+function Sign(a_pntA, a_pntB, a_pntC : TPointF) : Double;
+begin
+  Result := (a_pntA.x - a_pntC.x) * (a_pntB.y - a_pntC.y) - (a_pntB.x - a_pntC.x) * (a_pntA.y - a_pntC.y);
+end;
+
+//==============================================================================
+function PointInTriangle(a_pntP, a_pntA, a_pntB, a_pntC : TPointF) : Boolean;
+var
+  dA : Double;
+  dB : Double;
+  dC : Double;
+  bNeg : Boolean;
+  bPos : Boolean;
+begin
+  dA := Sign(a_pntP, a_pntA, a_pntB);
+  dB := Sign(a_pntP, a_pntB, a_pntC);
+  dC := Sign(a_pntP, a_pntC, a_pntA);
+
+  bNeg := (dA < 0) or (dB < 0) or (dC < 0);
+  bPos := (dA > 0) or (dB > 0) or (dC > 0);
+
+  Result := not(bNeg and bPos);
+end;
+
+//==============================================================================
+function GetVectorsAngle(a_pntRef, a_pntA, a_pntB : TPointF) : Double;
+var
+  dDotProd : Double;
+begin
+  a_pntA.X := a_pntA.X - a_pntRef.X;
+  a_pntA.Y := a_pntA.Y - a_pntRef.Y;
+  a_pntB.X := a_pntB.X - a_pntRef.X;
+  a_pntB.Y := a_pntB.Y - a_pntRef.Y;
+
+  dDotProd := a_pntA.X * a_pntB.X + a_pntA.Y * a_pntB.Y;
+
+  Result := ArcSin(dDotProd/(Sqrt(Power(a_pntA.X, 2) + Power(a_pntA.Y, 2)) *
+                             Sqrt(Power(a_pntB.X, 2) + Power(a_pntB.Y, 2))));
+end;
+
 end.

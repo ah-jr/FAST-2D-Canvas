@@ -167,7 +167,7 @@ begin
   m_f2dCanvas.DrawLine(PointF(50, 350), PointF(240, 450));
 
   m_f2dCanvas.DrawColor := $FFBBBBBB;
-  m_f2dCanvas.LineWidth := 2;
+  m_f2dCanvas.LineWidth := 1.5;
   for i := 0 to 100 do
     m_f2dCanvas.DrawLine(50 + 6*i, 225, 50 + 6*(i+1), 235);
 
