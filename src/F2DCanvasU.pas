@@ -72,7 +72,7 @@ type
 
     ////////////////////////////////////////////////////////////////////////////
     ///  Geometry procedures:
-    procedure FillPath(a_lstPoints : TList<TPointF>);
+    procedure FillPath(a_f2dPath : TF2DPath);
 
 
     property DrawColor : TAlphaColor   read m_clDraw      write m_clDraw;
@@ -636,7 +636,7 @@ begin
 end;
 
 //==============================================================================
-procedure TF2DCanvas.FillPath(a_lstPoints : TList<TPointF>);
+procedure TF2DCanvas.FillPath(a_f2dPath : TF2DPath);
 var
   a_lstRemaining : TList<TPointF>;
   nPntIdx        : Integer;
@@ -652,13 +652,13 @@ var
 const
   c_nVerticesNum = 3;
 begin
-  if a_lstPoints.Count < c_nVerticesNum then
+  if a_f2dPath.Points.Count < c_nVerticesNum then
     Exit;
 
   a_lstRemaining := TList<TPointF>.Create;
 
-  for nPntIdx := 0 to a_lstPoints.Count - 1 do
-    a_lstRemaining.Add(a_lstPoints.Items[nPntIdx]);
+  for nPntIdx := 0 to a_f2dPath.Points.Count - 1 do
+    a_lstRemaining.Add(a_f2dPath.Points.Items[nPntIdx]);
 
   nPntIdx   := 0;
   bContains := False;
@@ -679,10 +679,10 @@ begin
 
     if GetVectorsAngle(pntCurr, pntNext, pntLast) < Pi then
     begin
-      for nAuxIdx := 0 to a_lstPoints.Count - 1 do
+      for nAuxIdx := 0 to a_lstRemaining.Count - 1 do
       begin
         if not (nAuxIdx in [nPntIdx, nNextIdx, nLastIdx]) then
-          bContains := bContains or PointInTriangle(a_lstPoints.Items[nAuxIdx], pntLast, pntCurr, pntNext);
+          bContains := bContains or PointInTriangle(a_lstRemaining.Items[nAuxIdx], pntLast, pntCurr, pntNext);
       end;
 
       if not bContains then

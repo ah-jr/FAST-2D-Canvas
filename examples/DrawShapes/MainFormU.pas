@@ -47,6 +47,7 @@ var
 implementation
 
 uses
+  Generics.Collections,
   Math;
 
 {$R *.dfm}
@@ -118,7 +119,10 @@ end;
 //==============================================================================
 procedure TMainForm.RenderScreen(Sender: TObject);
 var
-  pntRotate : TPointF;           i : Integer;
+  pntRotate : TPointF;
+  nIndex    : Integer;
+  lstPoints : TList<TPointF>;
+  f2dPath   : TF2DPath;
 const
   c_nRotatorLength = 100;
   c_nRotatePeriod  = 50;
@@ -168,8 +172,8 @@ begin
 
   m_f2dCanvas.DrawColor := $FFBBBBBB;
   m_f2dCanvas.LineWidth := 1.5;
-  for i := 0 to 100 do
-    m_f2dCanvas.DrawLine(50 + 6*i, 225, 50 + 6*(i+1), 235);
+  for nIndex := 0 to 100 do
+    m_f2dCanvas.DrawLine(50 + 6*nIndex, 225, 50 + 6*(nIndex+1), 235);
 
   // Draw arcs
   m_f2dCanvas.FillColor := $FF1F1F1F;
@@ -200,6 +204,20 @@ begin
 
   m_f2dCanvas.DrawColor := $AFFFFFFF;
   m_f2dCanvas.DrawRoundRect(400 - c_nRotatorLength, 400 - c_nRotatorLength, 2*c_nRotatorLength, 2*c_nRotatorLength, 15, 5);
+
+  f2dPath := TF2DPath.Create;
+  f2dPath.AddPoint(10, 10);
+  f2dPath.AddPoint(20, 10);
+  f2dPath.AddPoint(20, 20);
+  f2dPath.AddPoint(30, 20);
+  f2dPath.AddPoint(30, 40);
+  f2dPath.AddPoint(15, 40);
+  f2dPath.AddPoint(20, 45);
+  f2dPath.AddPoint(10, 45);
+
+  f2dPath.Scale(2 * m_nAngleDif/c_nRotatePeriod + 1, 2 * m_nAngleDif/c_nRotatePeriod + 1);
+
+  m_f2dCanvas.FillPath(f2dPath);
 
   m_f2dCanvas.EndDraw;
 end;
