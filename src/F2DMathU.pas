@@ -152,17 +152,18 @@ end;
 //==============================================================================
 function GetVectorsAngle(a_pntRef, a_pntA, a_pntB : TPointF) : Double;
 var
-  dDotProd : Double;
+  dDotProd     : Double;
+  dDeterminant : Double;
 begin
   a_pntA.X := a_pntA.X - a_pntRef.X;
   a_pntA.Y := a_pntA.Y - a_pntRef.Y;
   a_pntB.X := a_pntB.X - a_pntRef.X;
   a_pntB.Y := a_pntB.Y - a_pntRef.Y;
 
-  dDotProd := a_pntA.X * a_pntB.X + a_pntA.Y * a_pntB.Y;
+  dDotProd     := a_pntA.X * a_pntB.X + a_pntA.Y * a_pntB.Y;
+  dDeterminant := a_pntA.X * a_pntB.Y - a_pntA.Y * a_pntB.X;
 
-  Result := ArcSin(dDotProd/(Sqrt(Power(a_pntA.X, 2) + Power(a_pntA.Y, 2)) *
-                             Sqrt(Power(a_pntB.X, 2) + Power(a_pntB.Y, 2))));
+  Result := Arctan2(dDeterminant, dDotProd);
 end;
 
 end.

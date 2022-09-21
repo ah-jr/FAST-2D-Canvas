@@ -29,7 +29,7 @@ type
 
     m_pBlendDesc    : ID3D11BlendState;
     m_matProj       : TXMMATRIX;
-    m_arrVertices   : array of TScreenVertex;
+    m_arrVertices   : TVertexArray;
     m_lstRender     : TList<TRenderQueueItem>;
 
     m_clDraw        : TAlphaColor;
@@ -73,6 +73,7 @@ type
     ////////////////////////////////////////////////////////////////////////////
     ///  Geometry procedures:
     procedure FillPath(a_f2dPath : TF2DPath);
+    procedure DrawPath(a_f2dPath : TF2DPath);
 
 
     property DrawColor : TAlphaColor   read m_clDraw      write m_clDraw;
@@ -636,122 +637,48 @@ begin
 end;
 
 //==============================================================================
-procedure TF2DCanvas.FillPath(a_f2dPath : TF2DPath);
+procedure TF2DCanvas.DrawPath(a_f2dPath : TF2DPath);
 var
-  a_lstRemaining : TList<TPointF>;
-  nPntIdx        : Integer;
-  nAuxIdx        : Integer;
-  nNextIdx       : Integer;
-  nLastIdx       : Integer;
-  pntCurr        : TPointF;
-  pntNext        : TPointF;
-  pntLast        : TPointF;
-  bContains      : Boolean;
-  nVertexCount   : Integer;
-  RenderItem     : TRenderQueueItem;
-const
-  c_nVerticesNum = 3;
+  nIndex : Integer;
 begin
-  if a_f2dPath.Points.Count < c_nVerticesNum then
+  if a_f2dPath.Points.Count < 2 then
     Exit;
 
-  a_lstRemaining := TList<TPointF>.Create;
+  for nIndex := 0 to a_f2dPath.Points.Count - 2 do
+    DrawLine(a_f2dPath.Points.Items[nIndex], a_f2dPath.Points.Items[nIndex + 1]);
 
-  for nPntIdx := 0 to a_f2dPath.Points.Count - 1 do
-    a_lstRemaining.Add(a_f2dPath.Points.Items[nPntIdx]);
+  DrawLine(a_f2dPath.Points.Items[a_f2dPath.Points.Count - 1], a_f2dPath.Points.Items[0]);
+end;
 
-  nPntIdx   := 0;
-  bContains := False;
+//==============================================================================
+procedure TF2DCanvas.FillPath(a_f2dPath : TF2DPath);
+var
+  nIndex         : Integer;
+  nVertexCount   : Integer;
+  nPathSize      : Integer;
+  RenderItem     : TRenderQueueItem;
+begin
+  if not a_f2dPath.Compiled then
+    a_f2dPath.Compile;
 
-  while a_lstRemaining.Count > c_nVerticesNum do
+  nVertexCount := Length(m_arrVertices);
+  nPathSize    := Length(a_f2dPath.Vertices);
+  SetLength(m_arrVertices, nVertexCount + nPathSize);
+
+  for nIndex := 0 to nPathSize - 1 do
   begin
-    if nPntIdx = a_lstRemaining.Count - 1
-      then nNextIdx := 0
-      else nNextIdx := nPntIdx + 1;
-
-    if nPntIdx = 0
-      then nLastIdx := a_lstRemaining.Count - 1
-      else nLastIdx := nPntIdx - 1;
-
-    pntCurr := a_lstRemaining.Items[nPntIdx];
-    pntLast := a_lstRemaining.Items[nLastIdx];
-    pntNext := a_lstRemaining.Items[nNextIdx];
-
-    if GetVectorsAngle(pntCurr, pntNext, pntLast) < Pi then
-    begin
-      for nAuxIdx := 0 to a_lstRemaining.Count - 1 do
-      begin
-        if not (nAuxIdx in [nPntIdx, nNextIdx, nLastIdx]) then
-          bContains := bContains or PointInTriangle(a_lstRemaining.Items[nAuxIdx], pntLast, pntCurr, pntNext);
-      end;
-
-      if not bContains then
-      begin
-        nVertexCount := Length(m_arrVertices);
-        SetLength(m_arrVertices, nVertexCount + c_nVerticesNum);
-
-        m_arrVertices[nVertexCount + 0].pos[0] := pntLast.X;
-        m_arrVertices[nVertexCount + 0].pos[1] := pntLast.Y;
-        m_arrVertices[nVertexCount + 0].pos[2] := 0;
-
-        m_arrVertices[nVertexCount + 1].pos[0] := pntCurr.X;
-        m_arrVertices[nVertexCount + 1].pos[1] := pntCurr.Y;
-        m_arrVertices[nVertexCount + 1].pos[2] := 0;
-
-        m_arrVertices[nVertexCount + 2].pos[0] := pntNext.X;
-        m_arrVertices[nVertexCount + 2].pos[1] := pntNext.Y;
-        m_arrVertices[nVertexCount + 2].pos[2] := 0;
-
-        for nAuxIdx := 0 to c_nVerticesNum - 1 do
-          m_arrVertices[nVertexCount + nAuxIdx].AssignColor(m_clFill);
-
-        RenderItem.Count    := c_nVerticesNum;
-        RenderItem.Topology := D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-
-        m_lstRender.Add(RenderItem);
-
-        a_lstRemaining.Remove(pntCurr);
-        nPntIdx := 0;
-      end
-      else
-      begin
-        nPntIdx := nPntIdx + 1;
-      end;
-    end
-    else
-    begin
-      nPntIdx := nPntIdx + 1;
-    end;
-
-    bContains := False;
+    m_arrVertices[nVertexCount + nIndex].pos[0] := a_f2dPath.Vertices[nIndex].pos[0];
+    m_arrVertices[nVertexCount + nIndex].pos[1] := a_f2dPath.Vertices[nIndex].pos[1];
+    m_arrVertices[nVertexCount + nIndex].pos[2] := 0;
   end;
 
-  //////////////////////////////////////////////////////////////////////////////
-  ///  Connect last 3 points
-  nVertexCount := Length(m_arrVertices);
-  SetLength(m_arrVertices, nVertexCount + c_nVerticesNum);
+  for nIndex := 0 to nPathSize - 1 do
+    m_arrVertices[nVertexCount + nIndex].AssignColor(m_clFill);
 
-  m_arrVertices[nVertexCount + 0].pos[0] := a_lstRemaining.Items[0].X;
-  m_arrVertices[nVertexCount + 0].pos[1] := a_lstRemaining.Items[0].Y;
-  m_arrVertices[nVertexCount + 0].pos[2] := 0;
-
-  m_arrVertices[nVertexCount + 1].pos[0] := a_lstRemaining.Items[1].X;
-  m_arrVertices[nVertexCount + 1].pos[1] := a_lstRemaining.Items[1].Y;
-  m_arrVertices[nVertexCount + 1].pos[2] := 0;
-
-  m_arrVertices[nVertexCount + 2].pos[0] := a_lstRemaining.Items[2].X;
-  m_arrVertices[nVertexCount + 2].pos[1] := a_lstRemaining.Items[2].Y;
-  m_arrVertices[nVertexCount + 2].pos[2] := 0;
-
-  for nAuxIdx := 0 to c_nVerticesNum - 1 do
-    m_arrVertices[nVertexCount + nAuxIdx].AssignColor(m_clFill);
-
-  RenderItem.Count    := c_nVerticesNum;
+  RenderItem.Count    := nPathSize;
   RenderItem.Topology := D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
   m_lstRender.Add(RenderItem);
-
-  a_lstRemaining.Free;
 end;
 
 //==============================================================================

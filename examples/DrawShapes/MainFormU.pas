@@ -21,7 +21,7 @@ uses
 type
   TContainer = class(TPanel)
     private
-      procedure WMPaint(var Msg : TWMPaint); message WM_PAINT;
+      procedure WMPaint     (var Msg : TWMPaint); message WM_PAINT;
       procedure WMEraseBkgnd(var Msg : TMessage); message WM_ERASEBKGND;
   end;
 
@@ -31,7 +31,7 @@ type
     procedure FormResize(Sender: TObject);
 
   private
-    m_pnlD3dCanvas : TContainer;
+    m_pnlF2dCanvas : TContainer;
 
     m_f2dCanvas : TF2DCanvas;
     m_tmrRender : TTimer;
@@ -72,16 +72,16 @@ procedure TMainForm.FormCreate(Sender: TObject);
 var
   f2dProp : TF2DCanvasProperties;
 begin
-  m_pnlD3dCanvas := TContainer.Create(Self);
-  m_pnlD3dCanvas.Parent := Self;
-  m_pnlD3dCanvas.Align  := alClient;
+  m_pnlF2dCanvas := TContainer.Create(Self);
+  m_pnlF2dCanvas.Parent := Self;
+  m_pnlF2dCanvas.Align  := alClient;
 
 
   with f2dProp do
   begin
-    Hwnd   := m_pnlD3dCanvas.Handle;
-    Width  := m_pnlD3dCanvas.Width;
-    Height := m_pnlD3dCanvas.Height;
+    Hwnd   := m_pnlF2dCanvas.Handle;
+    Width  := m_pnlF2dCanvas.Width;
+    Height := m_pnlF2dCanvas.Height;
     MSAA   := 8;
   end;
 
@@ -211,13 +211,16 @@ begin
   f2dPath.AddPoint(20, 20);
   f2dPath.AddPoint(30, 20);
   f2dPath.AddPoint(30, 40);
-  f2dPath.AddPoint(15, 40);
+  f2dPath.AddPoint(12, 30);
   f2dPath.AddPoint(20, 45);
   f2dPath.AddPoint(10, 45);
 
-  f2dPath.Scale(2 * m_nAngleDif/c_nRotatePeriod + 1, 2 * m_nAngleDif/c_nRotatePeriod + 1);
+  f2dPath.Scale(4 * m_nAngleDif/c_nRotatePeriod + 1, 4 * m_nAngleDif/c_nRotatePeriod + 1);
 
   m_f2dCanvas.FillPath(f2dPath);
+  m_f2dCanvas.LineCap := lcRound;
+  m_f2dCanvas.DrawColor := $FFFFFFFF;
+  m_f2dCanvas.DrawPath(f2dPath);
 
   m_f2dCanvas.EndDraw;
 end;
