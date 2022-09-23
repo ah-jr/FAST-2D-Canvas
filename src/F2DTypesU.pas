@@ -51,6 +51,9 @@ type
       procedure RemovePoint(a_dX, a_dY : Double); overload;
       procedure Scale (a_dX, a_dY : Double);
       procedure Offset(a_dX, a_dY : Double);
+      procedure Rotate(a_pntRef : TPointF; a_dRatio : Double);
+      procedure FlipX;
+      procedure FlipY;
 
       procedure Compile;
 
@@ -154,6 +157,63 @@ begin
   begin
     pntNew.X := m_lstPoints.Items[nIndex].X + a_dX;
     pntNew.Y := m_lstPoints.Items[nIndex].Y + a_dY;
+
+    m_lstPoints.Items[nIndex] := pntNew;
+  end;
+end;
+
+//==============================================================================
+procedure TF2DPath.Rotate(a_pntRef : TPointF; a_dRatio : Double);
+var
+  nIndex : Integer;
+  pntAux : TPointF;
+  pntNew : TPointF;
+  dSin   : Double;
+  dCos   : Double;
+begin
+  dSin := Sin(a_dRatio * 2 * Pi);
+  dCos := Cos(a_dRatio * 2 * Pi);
+
+  for nIndex := 0 to m_lstPoints.Count - 1 do
+  begin
+    pntAux.X := m_lstPoints.Items[nIndex].X;
+    pntAux.Y := m_lstPoints.Items[nIndex].Y;
+
+    pntAux.X := pntAux.X - a_pntRef.X;
+    pntAux.Y := pntAux.Y - a_pntRef.Y;
+
+    pntNew.X := pntAux.X * dCos - pntAux.Y * dSin + a_pntRef.X;
+    pntNew.Y := pntAux.X * dSin + pntAux.Y * dCos + a_pntRef.Y;
+
+    m_lstPoints.Items[nIndex] := pntNew;
+  end;
+end;
+
+//==============================================================================
+procedure TF2DPath.FlipX;
+var
+  nIndex : Integer;
+  pntNew : TPointF;
+begin
+  for nIndex := 0 to m_lstPoints.Count - 1 do
+  begin
+    pntNew.X := -m_lstPoints.Items[nIndex].X;
+    pntNew.Y := m_lstPoints.Items[nIndex].Y;
+
+    m_lstPoints.Items[nIndex] := pntNew;
+  end;
+end;
+
+//==============================================================================
+procedure TF2DPath.FlipY;
+var
+  nIndex : Integer;
+  pntNew : TPointF;
+begin
+  for nIndex := 0 to m_lstPoints.Count - 1 do
+  begin
+    pntNew.X := m_lstPoints.Items[nIndex].X;
+    pntNew.Y := -m_lstPoints.Items[nIndex].Y;
 
     m_lstPoints.Items[nIndex] := pntNew;
   end;

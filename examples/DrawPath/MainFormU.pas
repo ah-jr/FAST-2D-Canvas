@@ -119,91 +119,15 @@ end;
 //==============================================================================
 procedure TMainForm.RenderScreen(Sender: TObject);
 var
-  pntRotate : TPointF;
-  nIndex    : Integer;
-  lstPoints : TList<TPointF>;
   f2dPath   : TF2DPath;
 const
-  c_nRotatorLength = 100;
   c_nRotatePeriod  = 50;
 begin
   m_f2dCanvas.BeginDraw;
-  m_f2dCanvas.Clear($FF000000);
-
-  // Write rounded rectangle in the back
-  m_f2dCanvas.FillColor := $6F202FFF;
-  m_f2dCanvas.FillRoundRect(PointF(20, 20), PointF(ClientWidth - 20, ClientHeight - 20), 10);
-
-  // Write 'Lines' with lines
-  m_f2dCanvas.LineWidth := 10;
-  m_f2dCanvas.LineCap   := lcRound;
-  m_f2dCanvas.DrawColor := $FFFF1F1F;
-
-  m_f2dCanvas.DrawLine(PointF(50, 50), PointF(50, 200));
-  m_f2dCanvas.DrawLine(PointF(50, 200), PointF(150, 200));
-
-  m_f2dCanvas.DrawLine(PointF(200, 80), PointF(200, 200));
-
-  m_f2dCanvas.DrawLine(PointF(250, 80), PointF(250, 200));
-  m_f2dCanvas.DrawLine(PointF(250, 80), PointF(350, 200));
-  m_f2dCanvas.DrawLine(PointF(350, 80), PointF(350, 200));
-
-  m_f2dCanvas.DrawLine(PointF(400, 80), PointF(400, 200));
-  m_f2dCanvas.DrawLine(PointF(400, 80), PointF(500, 80));
-  m_f2dCanvas.DrawLine(PointF(400, 140), PointF(500, 140));
-  m_f2dCanvas.DrawLine(PointF(400, 200), PointF(500, 200));
-
-  m_f2dCanvas.DrawLine(PointF(550, 80), PointF(650, 80));
-  m_f2dCanvas.DrawLine(PointF(550, 140), PointF(650, 140));
-  m_f2dCanvas.DrawLine(PointF(550, 200), PointF(650, 200));
-  m_f2dCanvas.DrawLine(PointF(550, 80), PointF(550, 140));
-  m_f2dCanvas.DrawLine(PointF(650, 140), PointF(650, 200));
-
-  m_f2dCanvas.LineWidth := 20;
-  m_f2dCanvas.LineCap   := lcMitter;
-  m_f2dCanvas.DrawColor := $FF00FFFF;
-  m_f2dCanvas.DrawLine(PointF(50, 260), PointF(240, 360));
-  m_f2dCanvas.LineWidth := 10;
-  m_f2dCanvas.DrawLine(PointF(50, 290), PointF(240, 390));
-  m_f2dCanvas.LineWidth := 5;
-  m_f2dCanvas.DrawLine(PointF(50, 320), PointF(240, 420));
-  m_f2dCanvas.LineWidth := 2;
-  m_f2dCanvas.DrawLine(PointF(50, 350), PointF(240, 450));
-
-  m_f2dCanvas.DrawColor := $FFBBBBBB;
-  m_f2dCanvas.LineWidth := 1.5;
-  for nIndex := 0 to 100 do
-    m_f2dCanvas.DrawLine(50 + 6*nIndex, 225, 50 + 6*(nIndex+1), 235);
-
-  // Draw arcs
-  m_f2dCanvas.FillColor := $FF1F1F1F;
-  m_f2dCanvas.FillArc(PointF(400, 400), c_nRotatorLength, c_nRotatorLength, 0, 0.75);
-  m_f2dCanvas.FillColor := $FF0F0F0F;
-  m_f2dCanvas.FillArc(PointF(400, 400), c_nRotatorLength, c_nRotatorLength, 0.75, 0.25);
-
-  m_f2dCanvas.FillColor := $FF1ACA90;
-  m_f2dCanvas.FillArc(PointF(600, 400), 60, 90, 0, 1);
-
-  // Draw rotating line
-  pntRotate.X := 400 + c_nRotatorLength * Sin(-2 * Pi * (m_nAngleDif/c_nRotatePeriod));
-  pntRotate.Y := 400 + c_nRotatorLength * Cos(-2 * Pi * (m_nAngleDif/c_nRotatePeriod));
-
-  m_f2dCanvas.DrawColor := $FFFFFFFF;
-  m_f2dCanvas.LineWidth := 5;
-  m_f2dCanvas.DrawLine(PointF(400, 400), pntRotate);
 
   Inc(m_nAngleDif);
   if m_nAngleDif >= c_nRotatePeriod then
     m_nAngleDif := 0;
-
-  // Draw rectangles
-  m_f2dCanvas.FillColor := $AF505FFF;
-  m_f2dCanvas.FillRect(PointF(50, 450), PointF(100, 500));
-  m_f2dCanvas.FillColor := $AFF0AF1F;
-  m_f2dCanvas.FillRect(PointF(80, 480), PointF(130, 530));
-
-  m_f2dCanvas.DrawColor := $AFFFFFFF;
-  m_f2dCanvas.DrawRoundRect(400 - c_nRotatorLength, 400 - c_nRotatorLength, 2*c_nRotatorLength, 2*c_nRotatorLength, 15, 5);
 
   f2dPath := TF2DPath.Create;
   f2dPath.AddPoint(10, 10);
