@@ -121,6 +121,8 @@ procedure TMainForm.RenderScreen(Sender: TObject);
 var
   pntRotate : TPointF;
   nIndex    : Integer;
+  lstPoints : TList<TPointF>;
+  f2dPath   : TF2DPath;
 const
   c_nRotatorLength = 100;
   c_nRotatePeriod  = 50;
@@ -202,6 +204,23 @@ begin
 
   m_f2dCanvas.DrawColor := $AFFFFFFF;
   m_f2dCanvas.DrawRoundRect(400 - c_nRotatorLength, 400 - c_nRotatorLength, 2*c_nRotatorLength, 2*c_nRotatorLength, 15, 5);
+
+  f2dPath := TF2DPath.Create;
+  f2dPath.AddPoint(10, 10);
+  f2dPath.AddPoint(20, 10);
+  f2dPath.AddPoint(20, 20);
+  f2dPath.AddPoint(30, 20);
+  f2dPath.AddPoint(30, 40);
+  f2dPath.AddPoint(12, 30);
+  f2dPath.AddPoint(20, 45);
+  f2dPath.AddPoint(10, 45);
+
+  f2dPath.Scale(4 * m_nAngleDif/c_nRotatePeriod + 1, 4 * m_nAngleDif/c_nRotatePeriod + 1);
+
+  m_f2dCanvas.FillPath(f2dPath);
+  m_f2dCanvas.LineCap := lcRound;
+  m_f2dCanvas.DrawColor := $FFFFFFFF;
+  m_f2dCanvas.DrawPath(f2dPath);
 
   m_f2dCanvas.EndDraw;
 end;

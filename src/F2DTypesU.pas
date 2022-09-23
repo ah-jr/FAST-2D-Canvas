@@ -186,7 +186,6 @@ begin
     a_lstRemaining.Add(m_lstPoints.Items[nPntIdx]);
 
   nPntIdx   := 0;
-  bContains := False;
 
   while a_lstRemaining.Count > c_nVerticesNum do
   begin
