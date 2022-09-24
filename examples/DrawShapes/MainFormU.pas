@@ -76,7 +76,6 @@ begin
   m_pnlF2dCanvas.Parent := Self;
   m_pnlF2dCanvas.Align  := alClient;
 
-
   with f2dProp do
   begin
     Hwnd   := m_pnlF2dCanvas.Handle;
