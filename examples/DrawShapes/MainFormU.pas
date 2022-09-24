@@ -196,9 +196,9 @@ begin
 
   // Draw rectangles
   m_f2dCanvas.FillColor := $AF505FFF;
-  m_f2dCanvas.FillRect(PointF(50, 450), PointF(100, 500));
+  m_f2dCanvas.FillRect(PointF(70, 420), PointF(120, 470));
   m_f2dCanvas.FillColor := $AFF0AF1F;
-  m_f2dCanvas.FillRect(PointF(80, 480), PointF(130, 530));
+  m_f2dCanvas.FillRect(PointF(100, 450), PointF(180, 500));
 
   m_f2dCanvas.DrawColor := $AFFFFFFF;
   m_f2dCanvas.DrawRoundRect(400 - c_nRotatorLength, 400 - c_nRotatorLength, 2*c_nRotatorLength, 2*c_nRotatorLength, 15, 5);
