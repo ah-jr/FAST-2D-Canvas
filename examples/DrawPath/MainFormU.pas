@@ -119,32 +119,69 @@ end;
 //==============================================================================
 procedure TMainForm.RenderScreen(Sender: TObject);
 var
-  f2dPath   : TF2DPath;
+  f2dGearPath : TF2DPath;
 const
-  c_nRotatePeriod  = 50;
+  c_nRotatePeriod = 400;
 begin
   m_f2dCanvas.BeginDraw;
+  m_f2dCanvas.Clear;
+
+  m_f2dCanvas.LineWidth := 1.5;
+  m_f2dCanvas.LineCap   := lcRound;
+  m_f2dCanvas.DrawColor := $FFFFFFFF;
+  m_f2dCanvas.FillColor := $FFFFFFFF;
 
   Inc(m_nAngleDif);
   if m_nAngleDif >= c_nRotatePeriod then
     m_nAngleDif := 0;
 
-  f2dPath := TF2DPath.Create;
-  f2dPath.AddPoint(10, 10);
-  f2dPath.AddPoint(20, 10);
-  f2dPath.AddPoint(20, 20);
-  f2dPath.AddPoint(30, 20);
-  f2dPath.AddPoint(30, 40);
-  f2dPath.AddPoint(12, 30);
-  f2dPath.AddPoint(20, 45);
-  f2dPath.AddPoint(10, 45);
+  f2dGearPath := TF2DPath.Create;
 
-  f2dPath.Scale(4 * m_nAngleDif/c_nRotatePeriod + 1, 4 * m_nAngleDif/c_nRotatePeriod + 1);
+  f2dGearPath.AddPoint(-0.3, 0.3);
+  f2dGearPath.AddPoint(-1, 0.3);
+  f2dGearPath.AddPoint(-1, -0.3);
 
-  m_f2dCanvas.FillPath(f2dPath);
-  m_f2dCanvas.LineCap := lcRound;
-  m_f2dCanvas.DrawColor := $FFFFFFFF;
-  m_f2dCanvas.DrawPath(f2dPath);
+  f2dGearPath.AddPoint(-0.3, -0.3);
+  f2dGearPath.AddPoint(-0.3, -1);
+  f2dGearPath.AddPoint(0.3, -1);
+
+  f2dGearPath.AddPoint(0.3, -0.3);
+  f2dGearPath.AddPoint(1, -0.3);
+  f2dGearPath.AddPoint(1, 0.3);
+
+  f2dGearPath.AddPoint(0.3, 0.3);
+  f2dGearPath.AddPoint(0.3, 1);
+  f2dGearPath.AddPoint(-0.3, 1);
+
+  f2dGearPath.Scale(50, 50);
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///  First gear
+  f2dGearPath.Offset(200, 150);
+  f2dGearPath.Rotate(PointF(200, 150), m_nAngleDif * 0.005);
+  m_f2dCanvas.DrawPath(f2dGearPath);
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///  Second gear
+  f2dGearPath.Offset(90, 0);
+  f2dGearPath.Rotate(PointF(290, 150), 0.125 - m_nAngleDif * 0.01);
+  m_f2dCanvas.DrawPath(f2dGearPath);
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///  First gear bigger
+  f2dGearPath.Offset(-290, -150);
+  f2dGearPath.Scale(2, 2);
+  f2dGearPath.Offset(200, 350);
+  f2dGearPath.Rotate(PointF(200, 350), m_nAngleDif * 0.01);
+  m_f2dCanvas.FillPath(f2dGearPath);
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///  Second gear bigger
+  m_f2dCanvas.FillColor := $FF00FFFF;
+  f2dGearPath.Offset(170, 0);
+  f2dGearPath.Rotate(PointF(370, 350), 0.125 - m_nAngleDif * 0.01);
+  m_f2dCanvas.FillPath(f2dGearPath);
+
 
   m_f2dCanvas.EndDraw;
 end;

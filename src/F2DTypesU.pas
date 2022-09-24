@@ -171,6 +171,8 @@ var
   dSin   : Double;
   dCos   : Double;
 begin
+  m_bCompiled := False;
+
   dSin := Sin(a_dRatio * 2 * Pi);
   dCos := Cos(a_dRatio * 2 * Pi);
 
@@ -195,6 +197,8 @@ var
   nIndex : Integer;
   pntNew : TPointF;
 begin
+  m_bCompiled := False;
+
   for nIndex := 0 to m_lstPoints.Count - 1 do
   begin
     pntNew.X := -m_lstPoints.Items[nIndex].X;
@@ -210,6 +214,8 @@ var
   nIndex : Integer;
   pntNew : TPointF;
 begin
+  m_bCompiled := False;
+
   for nIndex := 0 to m_lstPoints.Count - 1 do
   begin
     pntNew.X := m_lstPoints.Items[nIndex].X;
@@ -247,7 +253,7 @@ begin
 
   nPntIdx   := 0;
 
-  while a_lstRemaining.Count > c_nVerticesNum do
+  while (a_lstRemaining.Count > c_nVerticesNum) and (nPntIdx < a_lstRemaining.Count) do
   begin
     if nPntIdx = a_lstRemaining.Count - 1
       then nNextIdx := 0

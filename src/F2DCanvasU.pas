@@ -50,7 +50,7 @@ type
     procedure BeginDraw;
     procedure EndDraw;
 
-    procedure Clear(a_clColor : TAlphaColor);
+    procedure Clear(a_clColor : TAlphaColor = c_clBlack);
 
     ////////////////////////////////////////////////////////////////////////////
     ///  Drawing procedures:
@@ -287,7 +287,7 @@ begin
 end;
 
 //==============================================================================
-procedure TF2DCanvas.Clear(a_clColor : TAlphaColor);
+procedure TF2DCanvas.Clear(a_clColor : TAlphaColor = c_clBlack);
 begin
   m_f2dRenderer.Clear(D3DColor4fARGB(a_clColor));
 end;
