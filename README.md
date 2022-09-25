@@ -226,6 +226,7 @@ begin
   f2dGearPath.Rotate(PointF(200, 150), 0.5);
   
   m_f2dCanvas.DrawPath(f2dGearPath);
+  m_f2dCanvas.FillPath(f2dGearPath);
   m_f2dCanvas.EndDraw;
 end;
 ```
