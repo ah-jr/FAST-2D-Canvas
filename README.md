@@ -106,7 +106,7 @@ procedure DrawRoundRect(a_pntA, a_pntB : TPointF; a_dRadius : Double; a_sLineWid
 procedure DrawRoundRect(a_dLeft, a_dTop, a_dWidth, a_dHeight, a_dRadius : Double; a_sLineWidth : Single = -1); 
 ```
 
-- DrawArc - Draws an arc with the specified X and Y radius, starting at a specific point and rotating a specific amount. The a_dStart and a_dSize ranges from 0 to 1 and represent the percentage of the circle's circunference. If no width is provided, the value in the property LineWidth will be used:  
+- DrawArc - Draws an arc with the specified X and Y radius, starting at a specific point and rotating a specific amount. The a_dStart and a_dSize range from 0 to 1 and represent the percentage of the circle's circunference. If no width is provided, the value in the property LineWidth will be used:  
 ```
 procedure DrawArc(a_pntC : TPointF; a_dRadiusX, a_dRadiusY, a_dStart, a_dSize : Double; a_sLineWidth : Single = -1); 
 procedure DrawArc(a_dLeft, a_dTop, a_dRadiusX, a_dRadiusY, a_dStart, a_dSize : Double; a_sLineWidth : Single = -1); 
@@ -120,13 +120,13 @@ procedure DrawArc(a_dLeft, a_dTop, a_dRadiusX, a_dRadiusY, a_dStart, a_dSize : D
   procedure FillRect(a_dLeft, a_dTop, a_dWidth, a_dHeight : Double); 
 ```
 
-- FillRoundRect - Fills a rect delimited by points A and B with rounded corners specified by the radius parameter and the specified width.
+- FillRoundRect - Fills a rect delimited by points A and B with rounded corners specified by the radius parameter.
 ```
 procedure FillRoundRect(a_pntA, a_pntB : TPointF; a_dRadius : Double);  
 procedure FillRoundRect(a_dLeft, a_dTop, a_dWidth, a_dHeight, a_dRadius : Double); 
 ```
 
-- FillArc - Fills an arc with the specified X and Y radius, starting at a specific point and rotating a specific amount. The a_dStart and a_dSize ranges from 0 to 1 and represent the percentage of the circle's circunference.
+- FillArc - Fills an arc with the specified X and Y radius, starting at a specific point and rotating a specific amount. The a_dStart and a_dSize range from 0 to 1 and represent the percentage of the circle's circunference.
 ```
 procedure FillArc(a_pntC : TPointF; a_dRadiusX, a_dRadiusY, a_dStart, a_dSize : Double); 
 procedure FillArc(a_dLeft, a_dTop, a_dRadiusX, a_dRadiusY, a_dStart, a_dSize : Double); 
@@ -138,7 +138,7 @@ There are two painting styles: drawing and filling. Drawing implies outlining th
 
 ```
 m_f2dCanvas.DrawColor := $FFFF0000; // Sets red color for drawing
-m_f2dCanvas.FillColor := $9F00FF00; // Sets alpha blue color for filling
+m_f2dCanvas.FillColor := $9F00FF00; // Sets alpha green color for filling
 ```
 
 Drawing funcions will utilize the line style specified by the following properties:
@@ -175,7 +175,7 @@ procedure Scale (a_dX, a_dY : Double);
 procedure Offset(a_dX, a_dY : Double);
 ```
 
-- Offset - Rotates all points by a specified amount around a specified point:  
+- Rotate - Rotates all points by a specified amount around a specified point:  
 ```
 procedure Rotate(a_pntRef : TPointF; a_dRatio : Double);
 ```
@@ -221,12 +221,12 @@ begin
   f2dPath.AddPoint(0, 0);
   (...)
 
-  f2dGearPath.Scale(10, 10);
-  f2dGearPath.Offset(100, 150);
-  f2dGearPath.Rotate(PointF(200, 150), 0.5);
+  f2dPath.Scale(10, 10);
+  f2dPath.Offset(100, 150);
+  f2dPath.Rotate(PointF(200, 150), 0.5);
   
-  m_f2dCanvas.DrawPath(f2dGearPath);
-  m_f2dCanvas.FillPath(f2dGearPath);
+  m_f2dCanvas.DrawPath(f2dPath);
+  m_f2dCanvas.FillPath(f2dPath);
   m_f2dCanvas.EndDraw;
 end;
 ```
