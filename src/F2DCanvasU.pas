@@ -613,6 +613,7 @@ begin
   FillArc(a_pntA.X + a_dRadius, a_pntA.Y + a_dRadius, a_dRadius, a_dRadius, 0.5,  0.25);
   FillArc(a_pntA.X + a_dRadius, a_pntB.Y - a_dRadius, a_dRadius, a_dRadius, 0.75, 0.25);
 end;
+
 //==============================================================================
 procedure TF2DCanvas.FillArc(a_dLeft, a_dTop, a_dRadiusX, a_dRadiusY, a_dStart, a_dSize : Double);
 begin

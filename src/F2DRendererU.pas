@@ -59,6 +59,7 @@ begin
   m_cpProp.Width  := a_cpProp.Width;
   m_cpProp.Height := a_cpProp.Height;
   m_cpProp.MSAA   := a_cpProp.MSAA;
+  m_cpProp.Debug  := a_cpProp.Debug;
 
   m_bInitialized  := False;
 
@@ -76,11 +77,17 @@ end;
 procedure TF2DRenderer.Resize(a_nWidth : Integer; a_nHeight : Integer);
 var
   pBackbuffer : ID3D11Texture2D;
+  nFlags      : Cardinal;
 begin
   m_RenderTargetView := nil;
 
   try
-    m_SwapChain.ResizeBuffers(1, a_nWidth, a_nHeight, DXGI_FORMAT_R8G8B8A8_UNORM, Cardinal(D3D11_CREATE_DEVICE_DEBUG));
+    nFlags := 0;
+
+    if m_cpProp.Debug then
+      nFlags := Cardinal(D3D11_CREATE_DEVICE_DEBUG);
+
+    m_SwapChain.ResizeBuffers(1, a_nWidth, a_nHeight, DXGI_FORMAT_R8G8B8A8_UNORM, nFlags);
 
     m_Swapchain.GetBuffer(0, ID3D11Texture2D, pBackbuffer);
     m_Device.CreateRenderTargetView(pBackbuffer, nil, m_RenderTargetView);
@@ -177,7 +184,10 @@ begin
     arrFeatureLevel[1] :=  D3D_FEATURE_LEVEL_10_1;
     arrFeatureLevel[2] :=  D3D_FEATURE_LEVEL_10_0;
 
-    nFlags := Cardinal(D3D11_CREATE_DEVICE_DEBUG);
+    nFlags := 0;
+
+    if m_cpProp.Debug then
+      nFlags := Cardinal(D3D11_CREATE_DEVICE_DEBUG);
 
     D3D11CreateDeviceAndSwapChain(
       nil,
@@ -209,7 +219,10 @@ var
   wFlags     : DWORD;
   pErrBuffer : ID3DBlob;
 begin
-  wFlags := D3DCOMPILE_ENABLE_STRICTNESS or D3DCOMPILE_DEBUG;
+  wFlags := D3DCOMPILE_ENABLE_STRICTNESS;
+
+  if m_cpProp.Debug then
+    wFlags := wFlags or D3DCOMPILE_DEBUG;
 
   D3DCompileFromFile(szFilePath, nil, nil, szFunc, szShaderModel, wFlags, 0, pBuffer, Pointer(pErrBuffer));
 

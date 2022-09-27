@@ -15,6 +15,7 @@ type
     Width       : Integer;
     Height      : Integer;
     MSAA        : Integer;
+    Debug       : Boolean;
   end;
 
   T3DSingleArray = array [0..2] of Single;
