@@ -239,8 +239,26 @@ end;
 
 //==============================================================================
 procedure TF2DCanvas.ChangeSize(a_nWidth : Integer; a_nHeight : Integer);
+var
+  nViewportCount : UINT;
+  d3dViewport    : TD3D11_Viewport;
+  d3dMappedRes   : TD3D11_Mapped_Subresource;
 begin
   m_f2dRenderer.Resize(a_nWidth, a_nHeight);
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///  View Port
+  nViewportCount := 1;
+	m_f2dRenderer.DeviceContext.RSGetViewports(nViewportCount, @d3dViewport);
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///  Projection
+	m_matProj := XMMatrixOrthographicOffCenterLH(d3dViewport.TopLeftX, d3dViewport.Width, d3dViewport.Height, d3dViewport.TopLeftY,
+		d3dViewport.MinDepth, d3dViewport.MaxDepth);
+
+  m_f2dRenderer.DeviceContext.Map(m_pScreenBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, d3dMappedRes);
+  CopyMemory(d3dMappedRes.pData, @m_matProj, SizeOf(TXMMATRIX));
+  m_f2dRenderer.DeviceContext.Unmap(m_pScreenBuffer, 0);
 end;
 
 //==============================================================================

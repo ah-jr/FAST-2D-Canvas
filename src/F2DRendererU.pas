@@ -86,6 +86,18 @@ begin
     m_Device.CreateRenderTargetView(pBackbuffer, nil, m_RenderTargetView);
     m_DeviceContext.OMSetRenderTargets(1, m_RenderTargetView, nil);
 
+    FillChar(m_Viewport, SizeOf(m_Viewport), 0);
+    with m_Viewport do
+    begin
+      Width    := a_nWidth;
+      Height   := a_nHeight;
+      MinDepth := 0;
+      MaxDepth := 1;
+      TopLeftX := 0;
+      TopLeftY := 0;
+    end;
+
+    m_DeviceContext.RSSetViewports(1, @m_Viewport);
   finally
     pBackbuffer := nil;
   end;
