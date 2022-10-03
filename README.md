@@ -43,7 +43,7 @@ begin
 end;
 ```
 
-In order to initialize the canvas, you must pass as paramter a TF2DCanvasProperties struct, containing the dimensions and HWND of the parent:  
+In order to initialize the canvas, you must pass as parameter a TF2DCanvasProperties struct, containing the dimensions and HWND of the parent:  
 
 ```
 (...)
