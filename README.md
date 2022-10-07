@@ -180,12 +180,12 @@ procedure Offset(a_dX, a_dY : Double);
 procedure Rotate(a_pntRef : TPointF; a_dRatio : Double);
 ```
 
-- FlipX - Multiplies all Xs by -1, flipping the image around the Y axis:
+- FlipX - Multiplies all X values by -1, flipping the image around the Y axis:
 ```
 procedure FlipX;
 ```
 
-- FlipY - Multiplies all Ys by -1, flipping the image around the X axis:
+- FlipY - Multiplies all Y values by -1, flipping the image around the X axis:
 ```
 procedure FlipY;
 ```
